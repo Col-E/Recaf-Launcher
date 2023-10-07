@@ -17,6 +17,12 @@ All usage assumes you are running the command similar to `java -jar launcher.jar
 Usage: <launcher> auto
 ```
 
+### Run
+ - Runs the currently installed version of Recaf
+```
+Usage: <launcher> run
+```
+
 ### Compatibility
  - Checks for a compatible version of Java
  - Checks if the current Java runtime includes JavaFX
