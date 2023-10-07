@@ -121,12 +121,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <!-- Enable basic minification. -->
-                    <minimizeJar>true</minimizeJar>
-                    <entryPoints>
-                        <entryPoint>software.coley.recaf.launch.Launcher</entryPoint>
-                    </entryPoints>
-
                     <!-- Transform the manifest to contain our main class, and a flag enabling multi-release mode -->
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
