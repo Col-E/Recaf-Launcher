@@ -8,7 +8,7 @@ All usage assumes you are running the command similar to `java -jar launcher.jar
  - Where `launcher.jar` is the file name you saved the launcher as.
  - Where `...` includes additional arguments, details of which can be found below.
 
-### Auto: The all-in one command.
+### Auto
  - Checks local system compatibility
  - Keeps JavaFX up-to-date
  - Keeps Recaf up-to-date
@@ -17,7 +17,7 @@ All usage assumes you are running the command similar to `java -jar launcher.jar
 Usage: <launcher> auto
 ```
 
-### Compatibility: Checking if the local system meets requirements for running Recaf
+### Compatibility
  - Checks for a compatible version of Java
  - Checks if the current Java runtime includes JavaFX
     - Bundling JavaFX _can_ work, but its your responsibility to ensure the bundled version is compatible with Recaf
@@ -28,13 +28,13 @@ Usage: <launcher> compatibility [ifx] [ss]
   ss        Skip solutions to detected problems
 ```
 
-### Update Recaf: Self explanatory
+### Update Recaf
  - Keeps Recaf up-to-date
 ```
 Usage: <launcher> update
 ```
 
-### Update JavaFX: Self explanatory
+### Update JavaFX
  - Keeps Recaf's local JavaFX cache up-to-date with the current release of JavaFX
  - Can be configured to use specific versions of JavaFX if desired
  - Can be configured to delete old versions of JavaFX in the cache automatically
@@ -54,7 +54,7 @@ Usage: <launcher> update-jfx [c] [f] [maxc=<maxCacheCount>]
                                is the latest
 ```
 
-### Check Recaf's version: Self explanatory
+### Check Recaf's version
  - Prints out the version of Recaf installed via the launcher
 ```
 Usage: <launcher> version
