@@ -41,10 +41,14 @@ public class UpdateRecaf implements Callable<Boolean> {
 
 		// Only run if the last update check wasn't too recent
 		Config config = Config.getInstance();
-		Instant nextCheckTime = config.getLastUpdate().plus(config.getUpdateCheckRate());
+		Instant lastUpdate = config.getLastUpdate();
+		Instant nextCheckTime = lastUpdate.plus(config.getUpdateCheckRate());
 		Instant now = Instant.now();
-		if (now.isBefore(nextCheckTime))
+		if (now.isBefore(nextCheckTime)) {
+			if (log)
+				System.out.println("Checked recently (" + lastUpdate + "), skipping update until " + nextCheckTime);
 			return false;
+		}
 		config.setLastUpdate(now);
 
 		// Get release JSON model from GitHub
@@ -82,6 +86,8 @@ public class UpdateRecaf implements Callable<Boolean> {
 				try {
 					byte[] download = Web.getBytes(downloadUrl);
 					Files.copy(new ByteArrayInputStream(download), recafJar, StandardCopyOption.REPLACE_EXISTING);
+					if (log)
+						System.out.println("Updated Recaf to " + latestVersion);
 					return true;
 				} catch (IOException ex) {
 					if (log) {

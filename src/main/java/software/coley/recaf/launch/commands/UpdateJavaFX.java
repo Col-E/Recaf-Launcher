@@ -26,17 +26,17 @@ import java.util.concurrent.Callable;
 @Command(name = "update-jfx", description = "Updates JavaFX")
 public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";
-	@Option(names = "c", description = "Clear the dependency cache")
+	@Option(names = {"-c", "--clear"}, description = "Clear the dependency cache")
 	private boolean clear;
-	@Option(names = "maxc", description = "Clear the dependency cache when this many files occupy it")
+	@Option(names = {"-maxc", "--maxCacheCount"}, description = "Clear the dependency cache when this many files occupy it")
 	private int maxCacheCount = Integer.MAX_VALUE;
-	@Option(names = "maxs", description = "Clear the dependency cache when this many bytes occupy it")
+	@Option(names = {"-maxs", "--maxCacheSize"}, description = "Clear the dependency cache when this many bytes occupy it")
 	private long maxCacheSize = Integer.MAX_VALUE;
-	@Option(names = "k", description = "Keep latest cached dependency in the cache when clearing")
+	@Option(names = {"-k", "--keepLatest"}, description = "Keep latest cached dependency in the cache when clearing")
 	private boolean keepLatest;
-	@Option(names = "f", description = "Force re-downloading even if the local install looks up-to-date")
+	@Option(names = {"-f", "--force"}, description = "Force re-downloading even if the local install looks up-to-date")
 	private boolean force;
-	@Option(names = "v", description = "Target JavaFX version to use, instead of whatever is the latest")
+	@Option(names = {"-v", "--version"}, description = "Target JavaFX version to use, instead of whatever is the latest")
 	private int version;
 
 	@Override
@@ -49,7 +49,7 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	 * @param clear
 	 * 		Clear the dependency cache
 	 * @param keepLatest
-	 * 		{@code true} to keep the latest version in the cache, clearing only older items.
+	 *        {@code true} to keep the latest version in the cache, clearing only older items.
 	 * @param maxCacheCount
 	 * 		Clear the dependency cache when this many files occupy it
 	 * @param maxCacheSize
@@ -86,7 +86,8 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	/**
 	 * Clear the local dependency cache.
 	 *
-	 * @param keepLatest {@code true} to keep the latest version in the cache, clearing only older items.
+	 * @param keepLatest
+	 *        {@code true} to keep the latest version in the cache, clearing only older items.
 	 */
 	public static void clearCache(boolean keepLatest) {
 		JavaFxVersion latestLocalVersion = getLocalVersion(false);

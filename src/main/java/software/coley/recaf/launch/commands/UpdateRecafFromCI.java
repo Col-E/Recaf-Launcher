@@ -23,7 +23,7 @@ import java.util.zip.ZipInputStream;
  */
 @Command(name = "update-ci", description = "Installs the latest artifact from CI", hidden = true)
 public class UpdateRecafFromCI implements Callable<Boolean> {
-	@Option(names = "b", description = {
+	@Option(names = {"-b", "--branch"}, description = {
 			"Branch name to pull from.",
 			"By default, no branch is used.",
 			"Whatever is found first on the CI will be grabbed."

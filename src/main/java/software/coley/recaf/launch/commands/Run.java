@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Command(name = "run", description = "Runs the installed version of Recaf")
 public class Run implements Callable<Void> {
 	private static final String MAIN_CLASS = "software.coley.recaf.Main";
-	@Option(names = "j", description = {
+	@Option(names = {"-j", "--java"}, description = {
 			"Path of Java executable to use when running Recaf.",
 			"Not specifying a value will use the same Java executable used by the launcher."
 	})
