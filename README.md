@@ -21,6 +21,10 @@ Usage: <launcher> auto
  - Runs the currently installed version of Recaf
 ```
 Usage: <launcher> run
+  -j, --java=<javaExecutable>
+         Path of Java executable to use when running Recaf.
+         Not specifying a value will use the same Java executable used by the
+           launcher.
 ```
 
 ### Compatibility
@@ -29,9 +33,11 @@ Usage: <launcher> run
     - Bundling JavaFX _can_ work, but its your responsibility to ensure the bundled version is compatible with Recaf
     - Ideally use a JDK that does not bundle JavaFX and let the launcher pull in JavaFX
 ```
-Usage: <launcher> compatibility [ifx] [ss]
-  ifx       Ignore problems with the local systems bundled JavaFX version
-  ss        Skip solutions to detected problems
+Usage: <launcher> compatibility [-ifx] [-ss]
+      -ifx, --ignoreBundledFx
+         Ignore problems with the local system's bundled JavaFX version
+      -ss, --skipSuggestions
+         Skip solutions to detected problems
 ```
 
 ### Update Recaf
@@ -45,19 +51,21 @@ Usage: <launcher> update
  - Can be configured to use specific versions of JavaFX if desired
  - Can be configured to delete old versions of JavaFX in the cache automatically
 ```
-Usage: <launcher> update-jfx [c] [f] [maxc=<maxCacheCount>]
-                             [maxs=<maxCacheSize>] [v=<version>]
-      c                      Clear the dependency cache
-      f                      Force re-downloading even if the local install
-                               looks up-to-date
-      k                      Keep latest cached dependency in the cache when
-                               clearing
-      maxc=<maxCacheCount>   Clear the dependency cache when this many files
-                               occupy it
-      maxs=<maxCacheSize>    Clear the dependency cache when this many bytes
-                               occupy it
-      v=<version>            Target JavaFX version to use, instead of whatever
-                               is the latest
+Usage: <launcher> update-jfx [-cfk] [-maxc=<maxCacheCount>]
+                             [-maxs=<maxCacheSize>] [-v=<version>]
+  -c, --clear               Clear the dependency cache
+  -f, --force               Force re-downloading even if the local install
+                              looks up-to-date
+  -k, --keepLatest          Keep latest cached dependency in the cache when
+                              clearing
+      -maxc, --maxCacheCount=<maxCacheCount>
+                            Clear the dependency cache when this many files
+                              occupy it
+      -maxs, --maxCacheSize=<maxCacheSize>
+                            Clear the dependency cache when this many bytes
+                              occupy it
+  -v, --version=<version>   Target JavaFX version to use, instead of whatever
+                              is the latest
 ```
 
 ### Check Recaf's version
