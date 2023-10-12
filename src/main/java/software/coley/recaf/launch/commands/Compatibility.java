@@ -13,9 +13,9 @@ import java.util.concurrent.Callable;
  */
 @Command(name = "compatibility", description = "Checks the local system for compatibility with Recaf 4.X")
 public class Compatibility implements Callable<Boolean> {
-	@Option(names = "ss", description = "Skip solutions to detected problems")
+	@Option(names = {"-ss", "--skipSuggestions"}, description = "Skip solutions to detected problems")
 	private boolean skipSuggestions;
-	@Option(names = "ifx", description = "Ignore problems with the local system's bundled JavaFX version")
+	@Option(names = {"-ifx", "--ignoreBundledFx"}, description = "Ignore problems with the local system's bundled JavaFX version")
 	private boolean ignoreBundledFx;
 
 	@Override
