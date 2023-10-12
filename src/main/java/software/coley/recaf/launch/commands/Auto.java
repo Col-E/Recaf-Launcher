@@ -28,7 +28,8 @@ public class Auto implements Callable<Void> {
 			return null;
 
 		// Update Recaf.
-		UpdateRecaf.update(true);
+		UpdateRecafFromCI.update(true, "dev4");
+		// TODO: When released, replace with - UpdateRecaf.update(true);
 
 		// Run recaf.
 		Run.run(true, null);
