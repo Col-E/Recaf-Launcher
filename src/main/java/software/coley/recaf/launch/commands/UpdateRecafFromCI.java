@@ -7,6 +7,8 @@ import com.eclipsesource.json.JsonValue;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import software.coley.recaf.launch.util.CommonPaths;
+import software.coley.recaf.launch.util.Config;
+import software.coley.recaf.launch.util.UpdateResult;
 import software.coley.recaf.launch.util.Web;
 
 import java.io.ByteArrayInputStream;
@@ -22,7 +24,7 @@ import java.util.zip.ZipInputStream;
  * Command for updating Recaf from whatever is on the CI's latest artifact.
  */
 @Command(name = "update-ci", description = "Installs the latest artifact from CI", hidden = true)
-public class UpdateRecafFromCI implements Callable<Boolean> {
+public class UpdateRecafFromCI implements Callable<UpdateResult> {
 	@Option(names = {"-b", "--branch"}, description = {
 			"Branch name to pull from.",
 			"By default, no branch is used.",
@@ -31,20 +33,35 @@ public class UpdateRecafFromCI implements Callable<Boolean> {
 	private String branch;
 
 	@Override
-	public Boolean call() {
-		Predicate<String> branchMatcher = branch == null ?
-				null :
-				name -> branch.equalsIgnoreCase(name);
-		return update(branchMatcher);
+	public UpdateResult call() {
+		return update(true, branch);
 	}
 
 	/**
+	 * @param log
+	 *        {@code true} to log additional details.
+	 * @param branch
+	 * 		Name of branch to match (equality), or null for any branch.
+	 *
+	 * @return {@code true} on update success.
+	 */
+	public static UpdateResult update(boolean log, String branch) {
+		return update(log, name -> branch == null || branch.equalsIgnoreCase(name));
+	}
+
+	/**
+	 * @param log
+	 *        {@code true} to log additional details.
 	 * @param branchMatcher
 	 * 		Filter to whitelist only certain branches.
 	 *
 	 * @return {@code true} on update success.
 	 */
-	public static boolean update(Predicate<String> branchMatcher) {
+	public static UpdateResult update(boolean log, Predicate<String> branchMatcher) {
+		// Only run if the last update check wasn't too recent
+		if (Config.hasCheckedForUpdatesRecently(log))
+			return UpdateResult.UP_TO_DATE;
+
 		try {
 			// Get artifacts.
 			// They appear in sorted order by time.
@@ -96,16 +113,20 @@ public class UpdateRecafFromCI implements Callable<Boolean> {
 						if (entry.getName().toLowerCase().contains(".jar"))
 							Files.copy(zip, CommonPaths.getRecafJar(), StandardCopyOption.REPLACE_EXISTING);
 					}
+				} catch (IOException ex) {
+					System.err.println("Failed to download and extract CI artifact");
+					ex.printStackTrace();
+					return UpdateResult.FAILED_TO_WRITE;
 				}
-				return true;
+				return UpdateResult.UP_TO_DATE;
 			}
 
 			System.err.println("No matching CI artifacts");
-			return false;
+			return UpdateResult.FAILED_NO_CANDIDATES;
 		} catch (IOException ex) {
 			System.err.println("Failed to download/parse CI artifacts");
 			ex.printStackTrace();
-			return false;
+			return UpdateResult.FAILED_TO_FETCH;
 		}
 	}
 }

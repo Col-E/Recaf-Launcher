@@ -36,9 +36,28 @@ public class Config {
 	}
 
 	/**
+	 * @param log
+	 *        {@code true} to log extra info.
+	 *
+	 * @return {@code true} when we've already checked updates recently.
+	 */
+	public static boolean hasCheckedForUpdatesRecently(boolean log) {
+		Instant lastUpdate = instance.getLastUpdateCheck();
+		Instant nextCheckTime = lastUpdate.plus(instance.getUpdateCheckRate());
+		Instant now = Instant.now();
+		if (now.isBefore(nextCheckTime)) {
+			if (log)
+				System.out.println("Checked recently (" + lastUpdate + "), skipping update until " + nextCheckTime);
+			return true;
+		}
+		instance.setLastUpdateCheck(now);
+		return false;
+	}
+
+	/**
 	 * @return Time of last update check.
 	 */
-	public Instant getLastUpdate() {
+	public Instant getLastUpdateCheck() {
 		return lastUpdate;
 	}
 
@@ -46,7 +65,7 @@ public class Config {
 	 * @param lastUpdate
 	 * 		Time of last update check.
 	 */
-	public void setLastUpdate(Instant lastUpdate) {
+	public void setLastUpdateCheck(Instant lastUpdate) {
 		this.lastUpdate = lastUpdate;
 		save();
 	}
