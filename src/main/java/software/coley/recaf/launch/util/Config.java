@@ -42,7 +42,7 @@ public class Config {
 	 * @return {@code true} when we've already checked updates recently.
 	 */
 	public static boolean hasCheckedForUpdatesRecently(boolean log) {
-		Instant lastUpdate = instance.getLastUpdateCheck();
+		Instant lastUpdate = getInstance().getLastUpdateCheck();
 		Instant nextCheckTime = lastUpdate.plus(instance.getUpdateCheckRate());
 		Instant now = Instant.now();
 		if (now.isBefore(nextCheckTime)) {
