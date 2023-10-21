@@ -1,8 +1,5 @@
 package software.coley.recaf.launch.commands;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
-import org.json.XML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
@@ -18,9 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Comparator;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 
 /**
@@ -30,7 +25,6 @@ import java.util.concurrent.Callable;
 public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateJavaFX.class);
 
-	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";
 	@Option(names = {"-c", "--clear"}, description = "Clear the dependency cache")
 	private boolean clear;
 	@Option(names = {"-maxc", "--maxCacheCount"}, description = "Clear the dependency cache when this many files occupy it")
@@ -101,7 +95,7 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	 */
 	public static void clearCache(boolean keepLatest) {
 		logger.debug("Clearing dependency cache" + (keepLatest ? ", keeping latest entries" : ""));
-		JavaFxVersion latestLocalVersion = getLocalVersion();
+		JavaFxVersion latestLocalVersion = JavaFxVersion.getLocalVersion();
 		Path dependenciesDir = CommonPaths.getDependenciesDir();
 		try {
 			Files.walkFileTree(dependenciesDir, new SimpleFileVisitor<Path>() {
@@ -109,7 +103,7 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					if (keepLatest) {
 						// Only delete if it's an old version
-						JavaFxVersion versionOfFile = mapToVersion(file);
+						JavaFxVersion versionOfFile = JavaFxVersion.mapToVersion(file);
 						if (versionOfFile == null || versionOfFile.isOlder(latestLocalVersion)) {
 							logger.debug("Deleting dependency {}", file.getFileName());
 							Files.delete(file);
@@ -155,8 +149,8 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	 * @return Local version of JavaFX after update process.
 	 */
 	public static JavaFxVersion update(int version, boolean force) {
-		JavaFxVersion latest = version < 11 ? getLatestVersion() : new JavaFxVersion(version);
-		JavaFxVersion local = getLocalVersion();
+		JavaFxVersion latest = version < 11 ? JavaFxVersion.getLatestVersion() : new JavaFxVersion(version);
+		JavaFxVersion local = JavaFxVersion.getLocalVersion();
 		if (latest == null)
 			return local;
 		if (local == null)
@@ -209,68 +203,5 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 				}
 			}
 		}
-	}
-
-	/**
-	 * @return Locally cached JavaFX version in the Recaf directory.
-	 */
-	public static JavaFxVersion getLocalVersion() {
-		Path dependenciesDir = CommonPaths.getDependenciesDir();
-
-		try {
-			Optional<JavaFxVersion> maxVersion = Files.list(dependenciesDir)
-					.map(UpdateJavaFX::mapToVersion)
-					.filter(Objects::nonNull)
-					.max(Comparator.naturalOrder());
-			return maxVersion.orElse(null);
-		} catch (IOException ex) {
-			logger.error("Could not determine latest JavaFX version from local cache", ex);
-			return null;
-		}
-	}
-
-	/**
-	 * @return Latest remote JavaFX version.
-	 */
-	public static JavaFxVersion getLatestVersion() {
-		try {
-			String metadataXml = Web.getText(JFX_METADATA);
-			String metadataJson = XML.toJSONObject(metadataXml).toString();
-			JsonObject metadata = Json.parse(metadataJson).asObject();
-			JsonObject versioning = metadata.get("metadata").asObject().get("versioning").asObject();
-			String version = versioning.getString("release", String.valueOf(JavaFxVersion.MIN_SUGGESTED));
-			return new JavaFxVersion(version);
-		} catch (IOException ex) {
-			logger.error("Failed to retrieve latest JavaFX version information", ex);
-			return null;
-		}
-	}
-
-	/**
-	 * @param javafxDependency
-	 * 		Local file path.
-	 *
-	 * @return Extracted version based on file name pattern.
-	 */
-	private static JavaFxVersion mapToVersion(Path javafxDependency) {
-		JavaFxPlatform platform = JavaFxPlatform.detect();
-		String name = javafxDependency.getFileName().toString();
-		String[] prefixes = {
-				"javafx-base-",
-				"javafx-controls-",
-				"javafx-fxml-",
-				"javafx-graphics-",
-				"javafx-media-",
-				"javafx-swing-",
-				"javafx-web-"
-		};
-		for (String prefix : prefixes) {
-			if (name.startsWith(prefix)) {
-				int prefixLength = prefix.length();
-				String version = name.substring(prefixLength, name.indexOf("-" + platform.getClassifier(), prefixLength));
-				return new JavaFxVersion(version);
-			}
-		}
-		return null;
 	}
 }

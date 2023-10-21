@@ -1,11 +1,22 @@
 package software.coley.recaf.launch.info;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonObject;
+import org.json.XML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.coley.recaf.launch.util.CommonPaths;
 import software.coley.recaf.launch.util.Reflection;
+import software.coley.recaf.launch.util.Web;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +42,7 @@ public class JavaFxVersion implements Version {
 	 * Oldest version we'd suggest using.
 	 */
 	public static final int MIN_SUGGESTED = 21;
+	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";
 
 	private static int runtimeVersion;
 
@@ -42,6 +54,69 @@ public class JavaFxVersion implements Version {
 
 	public JavaFxVersion(int version) {
 		this.version = String.valueOf(version);
+	}
+
+
+	/**
+	 * @return Locally cached JavaFX version in the Recaf directory, or {@code null} if not known/installed.
+	 */
+	public static JavaFxVersion getLocalVersion() {
+		Path dependenciesDir = CommonPaths.getDependenciesDir();
+		try {
+			Optional<JavaFxVersion> maxVersion = Files.list(dependenciesDir)
+					.map(JavaFxVersion::mapToVersion)
+					.filter(Objects::nonNull)
+					.max(Comparator.naturalOrder());
+			return maxVersion.orElse(null);
+		} catch (IOException ex) {
+			logger.error("Could not determine latest JavaFX version from local cache", ex);
+			return null;
+		}
+	}
+
+	/**
+	 * @return Latest remote JavaFX version.
+	 */
+	public static JavaFxVersion getLatestVersion() {
+		try {
+			String metadataXml = Web.getText(JFX_METADATA);
+			String metadataJson = XML.toJSONObject(metadataXml).toString();
+			JsonObject metadata = Json.parse(metadataJson).asObject();
+			JsonObject versioning = metadata.get("metadata").asObject().get("versioning").asObject();
+			String version = versioning.getString("release", String.valueOf(MIN_SUGGESTED));
+			return new JavaFxVersion(version);
+		} catch (IOException ex) {
+			logger.error("Failed to retrieve latest JavaFX version information", ex);
+			return null;
+		}
+	}
+
+	/**
+	 * @param javafxDependency
+	 * 		Local file path.
+	 *
+	 * @return Extracted version based on file name pattern.
+	 */
+	public static JavaFxVersion mapToVersion(Path javafxDependency) {
+		JavaFxPlatform platform = JavaFxPlatform.detect();
+		String name = javafxDependency.getFileName().toString();
+		String[] prefixes = {
+				"javafx-base-",
+				"javafx-controls-",
+				"javafx-fxml-",
+				"javafx-graphics-",
+				"javafx-media-",
+				"javafx-swing-",
+				"javafx-web-"
+		};
+		for (String prefix : prefixes) {
+			if (name.startsWith(prefix)) {
+				int prefixLength = prefix.length();
+				String version = name.substring(prefixLength, name.indexOf("-" + platform.getClassifier(), prefixLength));
+				return new JavaFxVersion(version);
+			}
+		}
+		return null;
 	}
 
 	/**
