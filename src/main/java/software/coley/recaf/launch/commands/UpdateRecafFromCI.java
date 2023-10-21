@@ -25,7 +25,7 @@ import java.util.zip.ZipInputStream;
 /**
  * Command for updating Recaf from whatever is on the CI's latest artifact.
  */
-@Command(name = "update-ci", description = "Installs the latest artifact from CI", hidden = true)
+@Command(name = "update-ci", description = "Installs the latest artifact from CI")
 public class UpdateRecafFromCI implements Callable<UpdateResult> {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateRecafFromCI.class);
 

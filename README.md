@@ -45,6 +45,14 @@ Usage: <launcher> compatibility [-ifx] [-ss]
 ```
 Usage: <launcher> update
 ```
+If you want to be on the bleeding edge of things there is an alternative command:
+```
+Usage: <launcher> update-ci [-b=<branch>]
+Installs the latest artifact from CI
+  -b, --branch=<branch>   Branch name to pull from.
+                          By default, no branch is used.
+                          Whatever is found first on the CI will be grabbed.
+```
 
 ### Update JavaFX
  - Keeps Recaf's local JavaFX cache up-to-date with the current release of JavaFX
