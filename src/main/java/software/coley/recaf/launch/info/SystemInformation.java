@@ -45,11 +45,13 @@ public class SystemInformation {
 		// Parse from specification value, which is commonly defined.
 		String bitness = System.getProperty("sun.arch.data.model", "");
 		if (bitness.matches("[0-9]{2}"))
-			return Integer.parseInt(bitness, 10);
+			return Integer.parseInt(bitness);
+
 		// Parse from IBM value, used on IBM releases.
 		bitness = System.getProperty("com.ibm.vm.bitmode", "");
 		if (bitness.matches("[0-9]{2}"))
-			return Integer.parseInt(bitness, 10);
+			return Integer.parseInt(bitness);
+
 		return OS_ARCH.contains("64") ? 64 : 32;
 	}
 }

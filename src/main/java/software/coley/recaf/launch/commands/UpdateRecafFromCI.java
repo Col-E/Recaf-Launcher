@@ -4,6 +4,8 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import software.coley.recaf.launch.util.CommonPaths;
@@ -25,6 +27,8 @@ import java.util.zip.ZipInputStream;
  */
 @Command(name = "update-ci", description = "Installs the latest artifact from CI", hidden = true)
 public class UpdateRecafFromCI implements Callable<UpdateResult> {
+	private static final Logger logger = LoggerFactory.getLogger(UpdateRecafFromCI.class);
+
 	@Option(names = {"-b", "--branch"}, description = {
 			"Branch name to pull from.",
 			"By default, no branch is used.",
@@ -34,32 +38,28 @@ public class UpdateRecafFromCI implements Callable<UpdateResult> {
 
 	@Override
 	public UpdateResult call() {
-		return update(true, branch);
+		return update(branch);
 	}
 
 	/**
-	 * @param log
-	 *        {@code true} to log additional details.
 	 * @param branch
 	 * 		Name of branch to match (equality), or null for any branch.
 	 *
 	 * @return {@code true} on update success.
 	 */
-	public static UpdateResult update(boolean log, String branch) {
-		return update(log, name -> branch == null || branch.equalsIgnoreCase(name));
+	public static UpdateResult update(String branch) {
+		return update(name -> branch == null || branch.equalsIgnoreCase(name));
 	}
 
 	/**
-	 * @param log
-	 *        {@code true} to log additional details.
 	 * @param branchMatcher
 	 * 		Filter to whitelist only certain branches.
 	 *
 	 * @return {@code true} on update success.
 	 */
-	public static UpdateResult update(boolean log, Predicate<String> branchMatcher) {
+	public static UpdateResult update(Predicate<String> branchMatcher) {
 		// Only run if the last update check wasn't too recent
-		if (Config.hasCheckedForUpdatesRecently(log))
+		if (Config.getInstance().hasCheckedForUpdatesRecently())
 			return UpdateResult.UP_TO_DATE;
 
 		try {
@@ -68,6 +68,7 @@ public class UpdateRecafFromCI implements Callable<UpdateResult> {
 			String artifactsJson = Web.getText("https://api.github.com/repos/Col-E/Recaf/actions/artifacts");
 			JsonObject artifacts = Json.parse(artifactsJson).asObject();
 			JsonArray listing = artifacts.get("artifacts").asArray();
+			logger.debug("Recaf CI has {} artifacts listed, fetching first matching one...", listing.size());
 			for (JsonValue artifactValue : listing) {
 				JsonObject artifact = artifactValue.asObject();
 
@@ -114,18 +115,16 @@ public class UpdateRecafFromCI implements Callable<UpdateResult> {
 							Files.copy(zip, CommonPaths.getRecafJar(), StandardCopyOption.REPLACE_EXISTING);
 					}
 				} catch (IOException ex) {
-					System.err.println("Failed to download and extract CI artifact");
-					ex.printStackTrace();
+					logger.error("Failed to download and extract CI artifact", ex);
 					return UpdateResult.FAILED_TO_WRITE;
 				}
 				return UpdateResult.UP_TO_DATE;
 			}
 
-			System.err.println("No matching CI artifacts");
+			logger.info("No matching CI artifacts");
 			return UpdateResult.FAILED_NO_CANDIDATES;
 		} catch (IOException ex) {
-			System.err.println("Failed to download/parse CI artifacts");
-			ex.printStackTrace();
+			logger.error("Failed to download/parse CI artifacts", ex);
 			return UpdateResult.FAILED_TO_FETCH;
 		}
 	}

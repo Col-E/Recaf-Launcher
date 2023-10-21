@@ -1,5 +1,7 @@
 package software.coley.recaf.launch.commands;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import software.coley.recaf.launch.info.JavaFxPlatform;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
  */
 @Command(name = "run", description = "Runs the installed version of Recaf")
 public class Run implements Callable<Void> {
+	private static final Logger logger = LoggerFactory.getLogger(Run.class);
+
 	private static final String MAIN_CLASS = "software.coley.recaf.Main";
 	@Option(names = {"-j", "--java"}, description = {
 			"Path of Java executable to use when running Recaf.",
@@ -45,25 +49,28 @@ public class Run implements Callable<Void> {
 	 * 		Use {@code null} to automatically match the current runtime's version.
 	 */
 	public static void run(boolean inheritIO, String javaExecutablePath) {
-		RecafVersion installedVersion = RecafVersion.getInstalledVersion(true);
+		Path recafDirectory = CommonPaths.getRecafDirectory();
+		logger.debug("Looking in '{}' for Recaf/dependencies...", recafDirectory);
+
+		RecafVersion installedVersion = RecafVersion.getInstalledVersion();
 		if (installedVersion == null) {
-			System.err.println("No local version of Recaf found.\n" +
+			logger.error("No local version of Recaf found.\n" +
 					"- Try running with 'update'");
 			return;
 		}
 
 		JavaFxPlatform javaFxPlatform = JavaFxPlatform.detect();
-		JavaFxVersion javaFxVersion = UpdateJavaFX.getLocalVersion(true);
+		JavaFxVersion javaFxVersion = UpdateJavaFX.getLocalVersion();
 		if (javaFxVersion == null) {
-			System.err.println("No local cached version of JavaFX found.\n" +
+			logger.error("No local cached version of JavaFX found.\n" +
 					"- Try running with 'update-jfx'");
 			return;
 		}
+
 		try {
 			// Build classpath:
 			//  - Recaf jar
 			//  - JavaFX jars
-			Path recafDirectory = CommonPaths.getRecafDirectory();
 			List<Path> javafxDependencies = Files.list(CommonPaths.getDependenciesDir())
 					.filter(path -> {
 						String fileName = path.getFileName().toString();
@@ -87,6 +94,9 @@ public class Run implements Callable<Void> {
 						.resolve("java")
 						.toString();
 
+			logger.info("Running Recaf '{}' with JavaFX '{}:{}'",
+					installedVersion.getVersion(), javaFxVersion.getVersion(), javaFxPlatform.getClassifier());
+
 			// Create the process.
 			ProcessBuilder builder = new ProcessBuilder(javaExecutablePath, "-cp", classpath, MAIN_CLASS);
 			builder.directory(recafDirectory.toFile());
@@ -99,11 +109,15 @@ public class Run implements Callable<Void> {
 				StreamGobbler errorGobbler = new StreamGobbler(recafProcess.getErrorStream(), System.err::println);
 				new Thread(outputGobbler).start();
 				new Thread(errorGobbler).start();
-				recafProcess.waitFor();
+
+				// Handle non-standard exit codes. Recaf has a few for special cases.
+				int exitCode = recafProcess.waitFor();
+				switch (exitCode) {
+					// TODO: cases
+				}
 			}
 		} catch (IOException ex) {
-			System.err.println("Failed to launch Recaf");
-			ex.printStackTrace();
+			logger.error("Failed to launch Recaf", ex);
 		} catch (InterruptedException ignored) {
 			// Expected
 		}

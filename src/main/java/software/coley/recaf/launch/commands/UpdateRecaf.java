@@ -4,6 +4,8 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import software.coley.recaf.launch.info.RecafVersion;
 import software.coley.recaf.launch.util.CommonPaths;
@@ -23,24 +25,23 @@ import java.util.concurrent.Callable;
  */
 @Command(name = "update", description = "Updates Recaf")
 public class UpdateRecaf implements Callable<UpdateResult> {
+	private static final Logger logger = LoggerFactory.getLogger(UpdateRecaf.class);
+
 	private static final String LATEST_RELEASE = "https://api.github.com/repos/Col-E/Recaf/releases/latest";
 
 	@Override
 	public UpdateResult call() {
-		return update(true);
+		return update();
 	}
 
 	/**
-	 * @param log
-	 *        {@code true} to log failure cases.
-	 *
 	 * @return {@code true} when an update occurred.
 	 */
-	public static UpdateResult update(boolean log) {
-		RecafVersion installedVersion = RecafVersion.getInstalledVersion(true);
+	public static UpdateResult update() {
+		RecafVersion installedVersion = RecafVersion.getInstalledVersion();
 
 		// Only run if the last update check wasn't too recent
-		if (Config.hasCheckedForUpdatesRecently(log))
+		if (Config.getInstance().hasCheckedForUpdatesRecently())
 			return UpdateResult.UP_TO_DATE;
 
 		// Get release JSON model from GitHub
@@ -49,10 +50,7 @@ public class UpdateRecaf implements Callable<UpdateResult> {
 			String latestReleaseJson = Web.getText(LATEST_RELEASE);
 			latestRelease = Json.parse(latestReleaseJson).asObject();
 		} catch (IOException ex) {
-			if (log) {
-				System.err.println("Failed reading latest release from GitHub");
-				ex.printStackTrace();
-			}
+			logger.error("Failed reading latest release from GitHub", ex);
 			return UpdateResult.FAILED_TO_FETCH;
 		}
 
@@ -62,7 +60,7 @@ public class UpdateRecaf implements Callable<UpdateResult> {
 		if (!latestVersion.isNewer(installedVersion)) {
 			// Not newer, we're up-to-date.
 			assert installedVersion != null;
-			if (log) System.out.println("Current version '" + installedVersion.getVersion() + "' is up-to-date");
+			logger.debug("Current version '{}' is up-to-date", installedVersion.getVersion());
 			return UpdateResult.UP_TO_DATE;
 		}
 
@@ -78,14 +76,10 @@ public class UpdateRecaf implements Callable<UpdateResult> {
 				try {
 					byte[] download = Web.getBytes(downloadUrl);
 					Files.copy(new ByteArrayInputStream(download), recafJar, StandardCopyOption.REPLACE_EXISTING);
-					if (log)
-						System.out.println("Updated Recaf to " + latestVersion);
+					logger.info("Updated Recaf to '{}'", latestVersion);
 					return UpdateResult.UP_TO_DATE;
 				} catch (IOException ex) {
-					if (log) {
-						System.err.println("Failed writing to Recaf jar location: " + recafJar);
-						ex.printStackTrace();
-					}
+					logger.error("Failed writing to Recaf jar location: '{}'", recafJar, ex);
 					return UpdateResult.FAILED_TO_WRITE;
 				}
 			}
@@ -93,5 +87,4 @@ public class UpdateRecaf implements Callable<UpdateResult> {
 
 		return UpdateResult.FAILED_NO_CANDIDATES;
 	}
-
 }

@@ -1,5 +1,7 @@
 package software.coley.recaf.launch.commands;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 
 import java.util.concurrent.Callable;
@@ -16,19 +18,21 @@ import java.util.concurrent.Callable;
 		"If one of the commands fails, the following ones are skipped."
 })
 public class Auto implements Callable<Void> {
+	private static final Logger logger = LoggerFactory.getLogger(Auto.class);
+
 	@Override
 	public Void call() {
 		// Ensure compatibility
-		if (!Compatibility.isCompatible(false, false, true))
+		if (!Compatibility.isCompatible(false, false))
 			return null;
 
 		// Update JavaFX when possible, clearing outdated cache entries when it gets too cluttered
 		UpdateJavaFX.checkClearCache(false, true, 30, 64_000_000);
-		if (UpdateJavaFX.update(false, false) == null)
+		if (UpdateJavaFX.update(false) == null)
 			return null;
 
 		// Update Recaf.
-		UpdateRecafFromCI.update(true, "dev4");
+		UpdateRecafFromCI.update("dev4");
 		// TODO: When released, replace with - UpdateRecaf.update(true);
 
 		// Run recaf.

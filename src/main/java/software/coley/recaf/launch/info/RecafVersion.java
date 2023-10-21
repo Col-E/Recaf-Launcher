@@ -4,6 +4,8 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.coley.recaf.launch.util.CommonPaths;
 import software.coley.recaf.launch.util.Stream;
 
@@ -22,6 +24,8 @@ import java.util.zip.ZipFile;
  * Wrapper for Recaf version information.
  */
 public class RecafVersion implements Version {
+	private static final Logger logger = LoggerFactory.getLogger(RecafVersion.class);
+	private static RecafVersion installed;
 	private final String version;
 	private final int revision;
 
@@ -39,17 +43,17 @@ public class RecafVersion implements Version {
 	/**
 	 * Get the current installed version of Recaf.
 	 *
-	 * @param log
-	 *        {@code true} to log failure cases.
-	 *
 	 * @return Version string of Recaf, or {@code null} if not known/installed.
 	 */
-	public static RecafVersion getInstalledVersion(boolean log) {
-		Path recafJar = CommonPaths.getRecafJar();
+	public static RecafVersion getInstalledVersion() {
+		// The launcher is short-lived, so we can cache the lookup.
+		if (installed != null) return installed;
+		logger.debug("Attempting to resolve installed Recaf version...");
 
 		// Check if it exists.
+		Path recafJar = CommonPaths.getRecafJar();
 		if (!Files.exists(recafJar)) {
-			if (log) System.err.println("Recaf jar file not found: " + recafJar);
+			logger.warn("Recaf jar file not found: '{}'", recafJar);
 			return null;
 		}
 
@@ -58,8 +62,8 @@ public class RecafVersion implements Version {
 		try (ZipFile zip = new ZipFile(recafJar.toFile())) {
 			ZipEntry entry = zip.getEntry("software/coley/recaf/RecafBuildConfig.class");
 			if (entry == null) {
-				if (log)
-					System.err.println("Recaf build config is not present in the jar: " + recafJar);
+				logger.warn("Recaf build config is not present in the jar: '{}'\n"
+						+ "The launcher is only compatible with Recaf 4+", recafJar);
 				return null;
 			}
 			InputStream input = zip.getInputStream(entry);
@@ -69,10 +73,7 @@ public class RecafVersion implements Version {
 			Stream.transfer(2048, input, output);
 			buildConfigBytes = output.toByteArray();
 		} catch (IOException ex) {
-			if (log) {
-				System.err.println("Could not extract build config from the installed Recaf jar");
-				ex.printStackTrace();
-			}
+			logger.warn("Could not extract build config from the installed Recaf jar", ex);
 			return null;
 		}
 
@@ -83,12 +84,16 @@ public class RecafVersion implements Version {
 
 			// Extract field values.
 			Map<String, String> fields = new HashMap<>();
+			logger.debug("Found Recaf's build config, checking contents...");
 			ClassReader reader = new ClassReader(buildConfigBytes);
 			reader.accept(new ClassVisitor(Opcodes.ASM9) {
 				@Override
 				public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-					if (value != null)
-						fields.put(name, value.toString());
+					if (value != null) {
+						String valueStr = value.toString();
+						logger.debug(" - {} = {}", name, valueStr);
+						fields.put(name, valueStr);
+					}
 					return null;
 				}
 			}, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
@@ -97,12 +102,9 @@ public class RecafVersion implements Version {
 			String version = fields.get("VERSION");
 			String gitRevision = fields.get("GIT_REVISION");
 			int revision = gitRevision.matches("\\d+") ? Integer.parseInt(gitRevision) : -1;
-			return new RecafVersion(version, revision);
+			return installed = new RecafVersion(version, revision);
 		} catch (Throwable t) {
-			if (log) {
-				System.err.println("An error occurred parsing the Recaf build config");
-				t.printStackTrace();
-			}
+			logger.error("An error occurred parsing the Recaf build config", t);
 			return null;
 		}
 	}

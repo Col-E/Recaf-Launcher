@@ -1,5 +1,7 @@
 package software.coley.recaf.launch.commands;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import software.coley.recaf.launch.info.JavaFxVersion;
@@ -13,6 +15,8 @@ import java.util.concurrent.Callable;
  */
 @Command(name = "compatibility", description = "Checks the local system for compatibility with Recaf 4.X")
 public class Compatibility implements Callable<Boolean> {
+	private static final Logger logger = LoggerFactory.getLogger(Compatibility.class);
+
 	@Option(names = {"-ss", "--skipSuggestions"}, description = "Skip solutions to detected problems")
 	private boolean skipSuggestions;
 	@Option(names = {"-ifx", "--ignoreBundledFx"}, description = "Ignore problems with the local system's bundled JavaFX version")
@@ -20,7 +24,7 @@ public class Compatibility implements Callable<Boolean> {
 
 	@Override
 	public Boolean call() {
-		return isCompatible(ignoreBundledFx, skipSuggestions, true);
+		return isCompatible(ignoreBundledFx, skipSuggestions);
 	}
 
 	/**
@@ -28,12 +32,10 @@ public class Compatibility implements Callable<Boolean> {
 	 * 		Ignore problems with the local system's bundled JavaFX version.
 	 * @param skipSuggestions
 	 * 		Skip logging solutions to detected problems.
-	 * @param log
-	 *        {@code true} to incompatibilities.
 	 *
 	 * @return {@code true} when compatible.
 	 */
-	public static boolean isCompatible(boolean ignoreBundledFx, boolean skipSuggestions, boolean log) {
+	public static boolean isCompatible(boolean ignoreBundledFx, boolean skipSuggestions) {
 		EnumSet<CompatibilityProblem> problems = getCompatibilityProblem();
 		if (ignoreBundledFx) {
 			// Allow people to shoot themselves in the foot.
@@ -46,18 +48,14 @@ public class Compatibility implements Callable<Boolean> {
 		// Check and log problems
 		int problemCount = problems.size();
 		if (problemCount > 0) {
-			if (log) {
-				System.err.println(problemCount == 1 ? "A problem was found that may lead to incompatibilities with Recaf" :
-						"Multiple problems were found that may lead to incompatibilities with Recaf");
-				for (CompatibilityProblem problem : problems) {
-					System.err.println(" - " + problem.message);
-				}
-				if (!skipSuggestions) {
-					System.err.println();
-					System.err.println("Suggestions:");
-					System.err.println(" - Install OpenJDK 17 or higher from https://adoptium.net/temurin/releases/");
-				}
-			}
+			StringBuilder sb = new StringBuilder();
+			sb.append(problemCount == 1 ? "A problem was found that may lead to incompatibilities with Recaf" :
+					"Multiple problems were found that may lead to incompatibilities with Recaf");
+			for (CompatibilityProblem problem : problems)
+				sb.append(" - ").append(problem.message);
+			if (!skipSuggestions)
+				sb.append("\nSuggestions:\n - Install OpenJDK 17 or higher from https://adoptium.net/temurin/releases/");
+			logger.warn(sb.toString());
 			return false;
 		}
 		return true;

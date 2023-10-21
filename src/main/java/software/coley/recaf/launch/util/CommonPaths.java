@@ -27,7 +27,7 @@ public class CommonPaths {
 			// Linux:   $XDG_CONFIG_HOME/   or   $HOME/.config
 			String dir = BaseDirectories.get().configDir;
 			if (dir == null)
-				throw new NullPointerException("BaseDirectories did not yield an initial directory");
+				throw new IllegalStateException("BaseDirectories did not yield an initial directory");
 			return Paths.get(dir).resolve("Recaf");
 		} catch (Throwable t) {
 			// The lookup only seems to fail on windows.

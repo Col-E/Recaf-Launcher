@@ -3,6 +3,8 @@ package software.coley.recaf.launch.util;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.WriterConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,15 +12,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Basic persistent launcher config.
  */
 public class Config {
+	private static final Logger logger = LoggerFactory.getLogger(Config.class);
 	private static Config instance;
 
 	private Instant lastUpdate = Instant.EPOCH;
-	private Duration updateCheckRate = Duration.ofDays(1);
+	private Duration updateCheckRate = Duration.ofMinutes(30);
 
 	private Config() {
 		// Deny construction
@@ -36,21 +41,27 @@ public class Config {
 	}
 
 	/**
-	 * @param log
-	 *        {@code true} to log extra info.
-	 *
 	 * @return {@code true} when we've already checked updates recently.
 	 */
-	public static boolean hasCheckedForUpdatesRecently(boolean log) {
-		Instant lastUpdate = instance.getLastUpdateCheck();
-		Instant nextCheckTime = lastUpdate.plus(instance.getUpdateCheckRate());
+	public boolean hasCheckedForUpdatesRecently() {
+		Instant lastUpdate = getLastUpdateCheck();
+		Instant nextCheckTime = lastUpdate.plus(getUpdateCheckRate());
 		Instant now = Instant.now();
 		if (now.isBefore(nextCheckTime)) {
-			if (log)
-				System.out.println("Checked recently (" + lastUpdate + "), skipping update until " + nextCheckTime);
+			// Pretty print duration until next update check.
+			Duration between = Duration.between(now, nextCheckTime);
+			String lastUpdateFormatted = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+					.withZone(ZoneId.systemDefault())
+					.format(lastUpdate);
+			String betweenStr = between.toString();
+			betweenStr = betweenStr.substring(2, betweenStr.indexOf('.')) + "S";
+			String betweenFormatted = betweenStr
+					.replaceAll("(\\d[HMS])(?!$)", "$1 ")
+					.toLowerCase();
+			logger.info("Checked for update recently on {}, will check again later in {}", lastUpdateFormatted, betweenFormatted);
 			return true;
 		}
-		instance.setLastUpdateCheck(now);
+		setLastUpdateCheck(now);
 		return false;
 	}
 
@@ -90,8 +101,7 @@ public class Config {
 				if (upateCheckRateStr != null)
 					updateCheckRate = Duration.parse(upateCheckRateStr);
 			} catch (Throwable t) {
-				System.err.println("Could not read launcher config contents");
-				t.printStackTrace();
+				logger.error("Could not read launcher config contents", t);
 				path.toFile().deleteOnExit();
 			}
 		}
@@ -108,8 +118,7 @@ public class Config {
 				Files.createDirectories(launcherDir);
 			Files.write(CommonPaths.getLauncherConfigFile(), object.toString(config).getBytes(StandardCharsets.UTF_8));
 		} catch (IOException ex) {
-			System.err.println("Could not write launcher config contents");
-			ex.printStackTrace();
+			logger.error("Could not write launcher config contents", ex);
 		}
 	}
 }
