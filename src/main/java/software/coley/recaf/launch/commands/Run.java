@@ -11,7 +11,6 @@ import software.coley.recaf.launch.util.CommonPaths;
 import software.coley.recaf.launch.util.StreamGobbler;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
  * Command for checking the currently installed version of Recaf.
  */
 @Command(name = "run", description = "Runs the installed version of Recaf")
-public class Run implements Callable<Void> {
+public class Run implements Callable<Run.RunResult> {
 	private static final Logger logger = LoggerFactory.getLogger(Run.class);
 
 	private static final String MAIN_CLASS = "software.coley.recaf.Main";
@@ -35,10 +34,9 @@ public class Run implements Callable<Void> {
 	private File javaExecutable;
 
 	@Override
-	public Void call() {
+	public Run.RunResult call() {
 		String javaExecutablePath = javaExecutable == null ? null : javaExecutable.getAbsolutePath();
-		run(true, javaExecutablePath);
-		return null;
+		return run(true, javaExecutablePath);
 	}
 
 	/**
@@ -48,7 +46,7 @@ public class Run implements Callable<Void> {
 	 * 		Path to use for invoking Java.
 	 * 		Use {@code null} to automatically match the current runtime's version.
 	 */
-	public static void run(boolean inheritIO, String javaExecutablePath) {
+	public static Run.RunResult run(boolean inheritIO, String javaExecutablePath) {
 		Path recafDirectory = CommonPaths.getRecafDirectory();
 		logger.debug("Looking in '{}' for Recaf/dependencies...", recafDirectory);
 
@@ -56,15 +54,15 @@ public class Run implements Callable<Void> {
 		if (installedVersion == null) {
 			logger.error("No local version of Recaf found.\n" +
 					"- Try running with 'update'");
-			return;
+			return RunResult.ERR_NOT_INSTALLED;
 		}
 
 		JavaFxPlatform javaFxPlatform = JavaFxPlatform.detect();
-		JavaFxVersion javaFxVersion = UpdateJavaFX.getLocalVersion();
+		JavaFxVersion javaFxVersion = JavaFxVersion.getLocalVersion();
 		if (javaFxVersion == null) {
 			logger.error("No local cached version of JavaFX found.\n" +
 					"- Try running with 'update-jfx'");
-			return;
+			return RunResult.ERR_NO_JFX;
 		}
 
 		try {
@@ -116,10 +114,24 @@ public class Run implements Callable<Void> {
 					// TODO: cases
 				}
 			}
-		} catch (IOException ex) {
-			logger.error("Failed to launch Recaf", ex);
 		} catch (InterruptedException ignored) {
 			// Expected
+		} catch (Throwable t) {
+			logger.error("Failed to launch Recaf", t);
+			return RunResult.ERR_LAUNCH;
+		}
+
+		return RunResult.SUCCESS;
+	}
+
+	public enum RunResult {
+		SUCCESS,
+		ERR_NOT_INSTALLED,
+		ERR_NO_JFX,
+		ERR_LAUNCH;
+
+		public boolean isSuccess() {
+			return this == SUCCESS;
 		}
 	}
 }
