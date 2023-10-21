@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import software.coley.recaf.launch.commands.Root;
+import software.coley.recaf.launch.gui.LauncherWindow;
 import software.coley.recaf.launch.info.JavaFxPlatform;
 import software.coley.recaf.launch.info.JavaFxVersion;
 import software.coley.recaf.launch.info.RecafVersion;
@@ -26,8 +27,15 @@ public class Launcher {
 		logger.info(dumpInfo());
 
 		// Check if user tried to run by double-clicking the jar instead of running from a console.
+		// If so, open the GUI.
 		if (System.console() == null && (args == null || args.length == 0)) {
-			JOptionPane.showMessageDialog(null, "The launcher is a command line application, run it from the command line");
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} catch (Throwable ignored) {
+				// Use the default ugly LaF then...
+			}
+
+			new LauncherWindow().setVisible(true);
 			return;
 		}
 
