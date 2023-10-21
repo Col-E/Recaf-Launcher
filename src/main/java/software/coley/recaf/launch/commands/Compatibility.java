@@ -9,6 +9,7 @@ import software.coley.recaf.launch.info.JavaVersion;
 
 import java.util.EnumSet;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 /**
  * Command for checking compatibility.
@@ -52,7 +53,7 @@ public class Compatibility implements Callable<Boolean> {
 			sb.append(problemCount == 1 ? "A problem was found that may lead to incompatibilities with Recaf" :
 					"Multiple problems were found that may lead to incompatibilities with Recaf");
 			for (CompatibilityProblem problem : problems)
-				sb.append(" - ").append(problem.message);
+				sb.append(" - ").append(problem.getMessage());
 			if (!skipSuggestions)
 				sb.append("\nSuggestions:\n - Install OpenJDK 17 or higher from https://adoptium.net/temurin/releases/");
 			logger.warn(sb.toString());
@@ -108,15 +109,19 @@ public class Compatibility implements Callable<Boolean> {
 	 * Type of compatibility problem.
 	 */
 	public enum CompatibilityProblem {
-		UNKNOWN_JAVA_VERSION("Unknown Java version"),
-		OUTDATED_JAVA_VERSION("Outdated Java version"),
-		OUTDATED_BUNDLED_JAVA_FX("Outdated JavaFX bundled in Java Runtime"),
-		BUNDLED_JAVA_FX("JavaFX bundled in Java Runtime");
+		UNKNOWN_JAVA_VERSION(() -> "Unknown Java version"),
+		OUTDATED_JAVA_VERSION(() -> "Outdated Java version (" + JavaVersion.get() + "), requires 17+"),
+		OUTDATED_BUNDLED_JAVA_FX(() -> "Outdated JavaFX bundled in Java Runtime (" + JavaFxVersion.getRuntimeVersion() + ")"),
+		BUNDLED_JAVA_FX(() -> "JavaFX bundled in Java Runtime (" + JavaFxVersion.getRuntimeVersion() + ")");
 
-		private final String message;
+		private final Supplier<String> message;
 
-		CompatibilityProblem(String message) {
+		CompatibilityProblem(Supplier<String> message) {
 			this.message = message;
+		}
+
+		public String getMessage() {
+			return message.get();
 		}
 	}
 }
