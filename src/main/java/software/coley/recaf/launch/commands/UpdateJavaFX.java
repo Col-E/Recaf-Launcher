@@ -28,9 +28,9 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	@Option(names = {"-c", "--clear"}, description = "Clear the dependency cache")
 	private boolean clear;
 	@Option(names = {"-maxc", "--maxCacheCount"}, description = "Clear the dependency cache when this many files occupy it")
-	private final int maxCacheCount = Integer.MAX_VALUE;
+	private int maxCacheCount = Integer.MAX_VALUE;
 	@Option(names = {"-maxs", "--maxCacheSize"}, description = "Clear the dependency cache when this many bytes occupy it")
-	private final long maxCacheSize = Integer.MAX_VALUE;
+	private long maxCacheSize = Integer.MAX_VALUE;
 	@Option(names = {"-k", "--keepLatest"}, description = "Keep latest cached dependency in the cache when clearing")
 	private boolean keepLatest;
 	@Option(names = {"-f", "--force"}, description = "Force re-downloading even if the local install looks up-to-date")
