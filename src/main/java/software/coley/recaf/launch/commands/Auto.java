@@ -1,7 +1,5 @@
 package software.coley.recaf.launch.commands;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 
 import java.util.concurrent.Callable;
@@ -18,8 +16,6 @@ import java.util.concurrent.Callable;
 		"If one of the commands fails, the following ones are skipped."
 })
 public class Auto implements Callable<Void> {
-	private static final Logger logger = LoggerFactory.getLogger(Auto.class);
-
 	@Override
 	public Void call() {
 		// Ensure compatibility

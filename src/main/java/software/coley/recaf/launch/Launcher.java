@@ -12,7 +12,6 @@ import software.coley.recaf.launch.info.SystemInformation;
 
 import javax.swing.*;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
 /**
@@ -28,7 +27,8 @@ public class Launcher {
 
 		// Check if user tried to run by double-clicking the jar instead of running from a console.
 		// If so, open the GUI.
-		if (System.console() == null && (args == null || args.length == 0)) {
+		boolean noArguments = (args == null || args.length == 0);
+		if (noArguments && System.console() == null) {
 			try {
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			} catch (Throwable ignored) {
@@ -37,6 +37,13 @@ public class Launcher {
 
 			new LauncherWindow().setVisible(true);
 			return;
+		} else if (noArguments) {
+			logger.info("\n" +
+					"===============================================================\n" +
+					"Seems like you didn't provide any launch arguments.\n" +
+					"You can open the GUI by running with 'javaw' instead of 'java'.\n" +
+					"If you meant to provide launch arguments, their usage is below.\n" +
+					"===============================================================\n\n");
 		}
 
 		// Run the console commands.
@@ -48,11 +55,13 @@ public class Launcher {
 		if (info == null) {
 			// Print system info so that we don't have to ask users for it all the time.
 			// If they screenshot or share the log it should be here.
+			RecafVersion recafVersion = RecafVersion.getInstalledVersion();
+			if (recafVersion == null) recafVersion = new RecafVersion("?", -1);
 			StringBuilder sb = new StringBuilder("Java Properties:\n");
 			Map<String, String> properties = new TreeMap<>(SystemInformation.ALL_PROPERTIES);
 			properties.put("javafx.version", String.valueOf(JavaFxVersion.getRuntimeVersion()));
 			properties.put("javafx.platform", JavaFxPlatform.detect().getClassifier());
-			properties.put("recaf.version", Objects.requireNonNullElse(RecafVersion.getInstalledVersion(), new RecafVersion("?", -1)).getVersion());
+			properties.put("recaf.version", recafVersion.getVersion());
 			properties.forEach((key, value) -> {
 				sb.append(String.format(" - %s = %s\n", key, value));
 			});

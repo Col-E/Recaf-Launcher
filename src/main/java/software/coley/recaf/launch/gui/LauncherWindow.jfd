@@ -10,8 +10,8 @@ new FormModel {
 			name: "this"
 			"title": "Recaf Launcher"
 			"name": "launcher"
-			"minimumSize": new java.awt.Dimension( 400, 250 )
-			"preferredSize": new java.awt.Dimension( 400, 250 )
+			"minimumSize": new java.awt.Dimension( 420, 280 )
+			"preferredSize": new java.awt.Dimension( 420, 280 )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
 				"$columnSpecs": "default, labelcompgap, default:grow, labelcompgap, default"
 				"$rowSpecs": "default, linegap, default, linegap, default, linegap, default"

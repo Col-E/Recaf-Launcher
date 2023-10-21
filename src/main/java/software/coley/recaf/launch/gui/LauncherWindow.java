@@ -121,8 +121,8 @@ public class LauncherWindow extends JFrame {
 		//======== this ========
 		setTitle("Recaf Launcher");
 		setName("launcher");
-		setMinimumSize(new Dimension(400, 250));
-		setPreferredSize(new Dimension(400, 250));
+		setMinimumSize(new Dimension(420, 280));
+		setPreferredSize(new Dimension(420, 280));
 		Container contentPane = getContentPane();
 		contentPane.setLayout(new FormLayout(
 			"default:grow",
