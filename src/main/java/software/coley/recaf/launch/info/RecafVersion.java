@@ -99,9 +99,11 @@ public class RecafVersion implements Version {
 			}, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG);
 
 			// Convert field values into version wrapper.
-			String version = fields.get("VERSION");
-			String gitRevision = fields.get("GIT_REVISION");
+			String version = fields.getOrDefault("VERSION", "0.0.0");
+			String gitRevision = fields.getOrDefault("GIT_REVISION", "-1");
 			int revision = gitRevision.matches("\\d+") ? Integer.parseInt(gitRevision) : -1;
+			if (revision == 1)
+				revision = -1;
 			return installed = new RecafVersion(version, revision);
 		} catch (Throwable t) {
 			logger.error("An error occurred parsing the Recaf build config", t);
@@ -160,7 +162,7 @@ public class RecafVersion implements Version {
 	@Override
 	public String toString() {
 		if (revision > 0)
-			return revision + " (" + revision + ")";
+			return version + " (" + revision + ")";
 		return version;
 	}
 }
