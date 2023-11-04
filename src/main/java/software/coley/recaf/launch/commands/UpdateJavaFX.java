@@ -192,9 +192,12 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 			String artifactUrlFormat = " https://repo1.maven.org/maven2/org/openjfx/%s/%s/" + artifactFormat;
 			String localArtifact = String.format(artifactFormat, artifact, versionName, classifier);
 			String artifactUrl = String.format(artifactUrlFormat, artifact, versionName, artifact, versionName, classifier);
-			Path localPath = CommonPaths.getDependenciesDir().resolve(localArtifact);
+			Path dependenciesDir = CommonPaths.getDependenciesDir();
+			Path localPath = dependenciesDir.resolve(localArtifact);
 			if (force || !Files.exists(localPath)) {
 				try {
+					if (Files.isDirectory(dependenciesDir)) Files.createDirectories(dependenciesDir);
+
 					// TODO: Validating these would be nice
 					byte[] download = Web.getBytes(artifactUrl);
 					Files.copy(new ByteArrayInputStream(download), localPath, StandardCopyOption.REPLACE_EXISTING);
