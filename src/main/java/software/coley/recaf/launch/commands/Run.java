@@ -69,7 +69,9 @@ public class Run implements Callable<Run.RunResult> {
 			// Build classpath:
 			//  - Recaf jar
 			//  - JavaFX jars
-			List<Path> javafxDependencies = Files.list(CommonPaths.getDependenciesDir())
+			Path dependenciesDir = CommonPaths.getDependenciesDir();
+			if (!Files.isDirectory(dependenciesDir)) return RunResult.ERR_NO_JFX;
+			List<Path> javafxDependencies = Files.list(dependenciesDir)
 					.filter(path -> {
 						String fileName = path.getFileName().toString();
 						return fileName.contains(javaFxVersion.getVersion() + "-" + javaFxPlatform.getClassifier());

@@ -62,6 +62,7 @@ public class JavaFxVersion implements Version {
 	 */
 	public static JavaFxVersion getLocalVersion() {
 		Path dependenciesDir = CommonPaths.getDependenciesDir();
+		if (!Files.isDirectory(dependenciesDir)) return null;
 		try {
 			Optional<JavaFxVersion> maxVersion = Files.list(dependenciesDir)
 					.map(JavaFxVersion::mapToVersion)
@@ -143,9 +144,9 @@ public class JavaFxVersion implements Version {
 
 			// Get release version string
 			logger.debug("Getting version info from JFX 'VersionInfo' class...");
-			Method setupSystemProperties = versionClass.getDeclaredMethod("getVersion");
-			setupSystemProperties.setAccessible(true);
-			String version = String.valueOf(setupSystemProperties.invoke(null));
+			Method getVersion = versionClass.getDeclaredMethod("getVersion");
+			getVersion.setAccessible(true);
+			String version = String.valueOf(getVersion.invoke(null));
 
 			// Extract major version to int
 			// Should be the first int
