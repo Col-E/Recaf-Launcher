@@ -196,7 +196,7 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 			Path localPath = dependenciesDir.resolve(localArtifact);
 			if (force || !Files.exists(localPath)) {
 				try {
-					if (Files.isDirectory(dependenciesDir)) Files.createDirectories(dependenciesDir);
+					if (!Files.isDirectory(dependenciesDir)) Files.createDirectories(dependenciesDir);
 
 					// TODO: Validating these would be nice
 					byte[] download = Web.getBytes(artifactUrl);
