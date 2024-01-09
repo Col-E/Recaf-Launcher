@@ -14,18 +14,27 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.EnumSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Basic launcher window with buttons to update Recaf and its dependencies.
  */
 public class LauncherWindow extends JFrame {
+	private final ExecutorService service = Executors.newCachedThreadPool(r -> {
+		Thread t = new Thread(r);
+		t.setDaemon(true);
+		return t;
+	});
+
 	public LauncherWindow() {
 		initComponents();
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		updateRecafVersionLabel();
 		updateJavafxVersionLabel();
+		updateRecafVersionLabel();
 		compatibilityCheck();
 	}
 
@@ -33,58 +42,77 @@ public class LauncherWindow extends JFrame {
 	 * Refresh version label.
 	 */
 	private void updateRecafVersionLabel() {
-		RecafVersion recafVersion = RecafVersion.getInstalledVersion();
-		recafVersionValueLabel.setText("<html>" + (recafVersion == null ? "<span style=\"color:red;\">Not installed</span>" : recafVersion) + "</html>");
+		service.submit(() -> {
+			RecafVersion recafVersion = RecafVersion.getInstalledVersion();
+			recafVersionValueLabel.setText("<html>" + (recafVersion == null ? "<span style=\"color:red;\">Not installed</span>" : recafVersion) + "</html>");
+		});
 	}
 
 	/**
 	 * Refresh version label.
 	 */
 	private void updateJavafxVersionLabel() {
-		JavaFxVersion jfxVersion = JavaFxVersion.getLocalVersion();
-		jfxVersionValueLabel.setText("<html>" + (jfxVersion == null ? "<span style=\"color:red;\">Not installed</span>" : jfxVersion) + "</html>");
+		service.submit(() -> {
+			JavaFxVersion jfxVersion = JavaFxVersion.getLocalVersion();
+			jfxVersionValueLabel.setText("<html>" + (jfxVersion == null ? "<span style=\"color:red;\">Not installed</span>" : jfxVersion) + "</html>");
+		});
 	}
 
 	/**
 	 * Updates Recaf.
 	 */
 	private void recafVersionUpdate() {
-		// TODO: When released, replace with - UpdateRecaf.update(true);
-		UpdateResult result = UpdateRecafFromCI.update("dev4");
-		if (result.isSuccess())
-			updateRecafVersionLabel();
+		launchButton.setEnabled(false);
+		recafVersionUpdateButton.setEnabled(false);
+		service.submit(() -> {
+			// TODO: When released, replace with - UpdateRecaf.update(true);
+			UpdateResult result = UpdateRecafFromCI.update("dev4");
+			if (result.isSuccess())
+				updateRecafVersionLabel();
+			recafVersionUpdateButton.setEnabled(true);
+			compatibilityCheck();
+		});
 	}
 
 	/**
 	 * Updates JavaFX.
 	 */
 	private void jfxVersionUpdate() {
-		JavaFxVersion javaFxVersion = UpdateJavaFX.update(true);
-		if (javaFxVersion != null)
-			updateJavafxVersionLabel();
+		service.submit(() -> {
+			JavaFxVersion javaFxVersion = UpdateJavaFX.update(true);
+			if (javaFxVersion != null)
+				updateJavafxVersionLabel();
+			compatibilityCheck();
+		});
 	}
 
 	/**
 	 * Runs compatibility check, refreshes output labels.
 	 */
 	private void compatibilityCheck() {
-		EnumSet<Compatibility.CompatibilityProblem> problems = Compatibility.getCompatibilityProblem();
-		if (problems.isEmpty()) {
-			compatibilityValueLabel.setText("<html><span style=\"color:green;\">✔</span></html>");
-		} else {
-			int count = problems.size();
-			String word = count == 1 ? "issue" : "issues";
-			compatibilityValueLabel.setText("<html><span style=\"color:red;\">" + count + " " + word + ", see below</span></html>");
-		}
-		launchButton.setEnabled(problems.isEmpty());
-		if (problems.isEmpty()) {
-			output.setText("Ready to launch Recaf " + RecafVersion.getInstalledVersion());
-		} else {
-			StringBuilder sb = new StringBuilder();
-			for (Compatibility.CompatibilityProblem problem : problems)
-				sb.append(" - ").append(problem.getMessage()).append("\n");
-			output.setText(sb.toString());
-		}
+		service.submit(() -> {
+			EnumSet<Compatibility.CompatibilityProblem> problems = Compatibility.getCompatibilityProblem();
+			if (problems.isEmpty()) {
+				compatibilityValueLabel.setText("<html><span style=\"color:green;\">✔</span></html>");
+			} else {
+				int count = problems.size();
+				String word = count == 1 ? "issue" : "issues";
+				compatibilityValueLabel.setText("<html><span style=\"color:red;\">" + count + " " + word + ", see below</span></html>");
+			}
+
+			RecafVersion installedVersion = RecafVersion.getInstalledVersion();
+			launchButton.setEnabled(problems.isEmpty() && installedVersion != null);
+			if (installedVersion == null) {
+				output.setText("- Recaf is not installed");
+			} else if (problems.isEmpty()) {
+				output.setText("Ready to launch Recaf " + installedVersion);
+			} else {
+				StringBuilder sb = new StringBuilder();
+				for (Compatibility.CompatibilityProblem problem : problems)
+					sb.append(" - ").append(problem.getMessage()).append("\n");
+				output.setText(sb.toString());
+			}
+		});
 	}
 
 	/**
@@ -140,7 +168,7 @@ public class LauncherWindow extends JFrame {
 			inputs.add(recafVersionLabel, CC.xy(1, 1));
 
 			//---- recafVersionValueLabel ----
-			recafVersionValueLabel.setText("UNKNOWN");
+			recafVersionValueLabel.setText("<pending...>");
 			inputs.add(recafVersionValueLabel, CC.xy(3, 1));
 
 			//---- recafVersionUpdateButton ----
@@ -153,7 +181,7 @@ public class LauncherWindow extends JFrame {
 			inputs.add(jfxVersionLabel, CC.xy(1, 3));
 
 			//---- jfxVersionValueLabel ----
-			jfxVersionValueLabel.setText("UNKNOWN");
+			jfxVersionValueLabel.setText("<pending...>");
 			inputs.add(jfxVersionValueLabel, CC.xy(3, 3));
 
 			//---- jfxVersionUpdateButton ----
@@ -166,7 +194,7 @@ public class LauncherWindow extends JFrame {
 			inputs.add(compatibilityLabel, CC.xy(1, 5));
 
 			//---- compatibilityValueLabel ----
-			compatibilityValueLabel.setText("UNKNOWN");
+			compatibilityValueLabel.setText("<pending...>");
 			inputs.add(compatibilityValueLabel, CC.xy(3, 5));
 
 			//---- compatibilityCheckButton ----
