@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import software.coley.recaf.launch.info.RecafVersion;
 import software.coley.recaf.launch.util.CommonPaths;
 import software.coley.recaf.launch.util.Config;
 import software.coley.recaf.launch.util.UpdateResult;
@@ -58,8 +59,10 @@ public class UpdateRecafFromCI implements Callable<UpdateResult> {
 	 * @return {@code true} on update success.
 	 */
 	public static UpdateResult update(Predicate<String> branchMatcher) {
+		RecafVersion installedVersion = RecafVersion.getInstalledVersion();
+
 		// Only run if the last update check wasn't too recent
-		if (Config.getInstance().hasCheckedForUpdatesRecently())
+		if (Config.getInstance().hasCheckedForUpdatesRecently() && installedVersion != null)
 			return UpdateResult.UP_TO_DATE;
 
 		try {

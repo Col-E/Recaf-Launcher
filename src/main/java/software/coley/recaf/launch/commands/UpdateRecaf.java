@@ -41,7 +41,7 @@ public class UpdateRecaf implements Callable<UpdateResult> {
 		RecafVersion installedVersion = RecafVersion.getInstalledVersion();
 
 		// Only run if the last update check wasn't too recent
-		if (Config.getInstance().hasCheckedForUpdatesRecently())
+		if (Config.getInstance().hasCheckedForUpdatesRecently() && installedVersion != null)
 			return UpdateResult.UP_TO_DATE;
 
 		// Get release JSON model from GitHub
@@ -57,9 +57,8 @@ public class UpdateRecaf implements Callable<UpdateResult> {
 		// Check if latest release tag (version) is newer than the current one.
 		String latestTag = latestRelease.getString("tag_name", "0.0.0");
 		RecafVersion latestVersion = new RecafVersion(latestTag, -1);
-		if (!latestVersion.isNewer(installedVersion)) {
+		if (installedVersion != null && !latestVersion.isNewer(installedVersion)) {
 			// Not newer, we're up-to-date.
-			assert installedVersion != null;
 			logger.debug("Current version '{}' is up-to-date", installedVersion.getVersion());
 			return UpdateResult.UP_TO_DATE;
 		}
