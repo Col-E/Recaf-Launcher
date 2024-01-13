@@ -29,6 +29,7 @@ import java.util.zip.ZipInputStream;
 @Command(name = "update-ci", description = "Installs the latest artifact from CI")
 public class UpdateRecafFromCI implements Callable<UpdateResult> {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateRecafFromCI.class);
+	private static final int RECAF_REPO_ID = 98499283; // See: https://api.github.com/repos/Col-E/Recaf
 
 	@Option(names = {"-b", "--branch"}, description = {
 			"Branch name to pull from.",
@@ -92,6 +93,11 @@ public class UpdateRecafFromCI implements Callable<UpdateResult> {
 					if (!branchMatcher.test(branch))
 						continue;
 				}
+
+				// Skip if the repository isn't Col-E/Recaf
+				int repositoryId = workflowRun.getInt("repository_id", 0);
+				if (repositoryId != RECAF_REPO_ID)
+					continue;
 
 				// Size sanity check
 				long size = artifact.getLong("size_in_bytes", -1);
