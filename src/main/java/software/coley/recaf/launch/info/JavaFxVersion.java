@@ -100,7 +100,7 @@ public class JavaFxVersion implements Version {
 			String metadataJson = XML.toJSONObject(metadataXml).toString();
 			JsonObject metadata = Json.parse(metadataJson).asObject();
 			JsonObject versioning = metadata.get("metadata").asObject().get("versioning").asObject();
-			JsonArray versions = versioning.get("versions").asArray();
+			JsonArray versions = versioning.get("versions").asObject().get("version").asArray();
 
 			// Newer versions are last in the array.
 			int currentJavaVersion = JavaVersion.get();
