@@ -1,7 +1,9 @@
 package software.coley.recaf.launch.info;
 
 import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import org.json.XML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +16,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +42,10 @@ public class JavaFxVersion implements Version {
 	 * Oldest version we'd suggest using.
 	 */
 	public static final int MIN_SUGGESTED = 21;
+	public static final NavigableMap<Integer, Integer> JFX_SUPPORTED_JDK_MAP = new TreeMap<>(Map.of(
+			0, 17, // Base case, Recaf does not go below JDK 17
+			23, 21 // JavaFX 23 requires Java 21 or higher
+	));
 	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";
 
 	private static int runtimeVersion;
@@ -56,6 +60,18 @@ public class JavaFxVersion implements Version {
 		this.version = String.valueOf(version);
 	}
 
+	/**
+	 * @return Major release version of JavaFX.
+	 */
+	public int getMajorVersion() {
+		if (version.matches("\\d+"))
+			return Integer.parseInt(version);
+		if (version.contains("."))
+			return Integer.parseInt(version.substring(0, version.indexOf('.')));
+		if (version.contains("-"))
+			return Integer.parseInt(version.substring(0, version.indexOf('-')));
+		throw new IllegalStateException("Cannot map JFX version to major version: " + version);
+	}
 
 	/**
 	 * @return Locally cached JavaFX version in the Recaf directory, or {@code null} if not known/installed.
@@ -84,8 +100,23 @@ public class JavaFxVersion implements Version {
 			String metadataJson = XML.toJSONObject(metadataXml).toString();
 			JsonObject metadata = Json.parse(metadataJson).asObject();
 			JsonObject versioning = metadata.get("metadata").asObject().get("versioning").asObject();
-			String version = versioning.getString("release", String.valueOf(MIN_SUGGESTED));
-			return new JavaFxVersion(version);
+			JsonArray versions = versioning.get("versions").asArray();
+
+			// Newer versions are last in the array.
+			int currentJavaVersion = JavaVersion.get();
+			for (int i = versions.size() - 1; i > 0; i--) {
+				JsonValue version = versions.get(i);
+				JavaFxVersion latestVersion = new JavaFxVersion(version.asString());
+
+				// Only return this version if its compatible with the current JDK.
+				int major = latestVersion.getMajorVersion();
+				int requiredJavaVersion  = JavaFxVersion.JFX_SUPPORTED_JDK_MAP.floorEntry(major).getValue();
+				if (currentJavaVersion >= requiredJavaVersion)
+					return latestVersion;
+			}
+
+			logger.error("Failed to find a compatible JavaFX version");
+			return null;
 		} catch (IOException ex) {
 			logger.error("Failed to retrieve latest JavaFX version information", ex);
 			return null;
