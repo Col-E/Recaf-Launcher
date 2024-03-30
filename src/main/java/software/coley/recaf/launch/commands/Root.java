@@ -12,7 +12,8 @@ import java.util.concurrent.Callable;
  * Root command. Registers the other commands.
  */
 @Command(name = "<launcher>", subcommands = {
-		Auto.class, Compatibility.class, UpdateJavaFX.class, UpdateRecaf.class, UpdateRecafFromCI.class, GetVersion.class, Run.class
+		Auto.class, Compatibility.class, UpdateJavaFX.class, UpdateRecaf.class, UpdateRecafFromCI.class,
+		GetVersion.class, Run.class, SetDefaultAction.class
 })
 public class Root implements Callable<Void> {
 	private static final Logger logger = LoggerFactory.getLogger(Root.class);

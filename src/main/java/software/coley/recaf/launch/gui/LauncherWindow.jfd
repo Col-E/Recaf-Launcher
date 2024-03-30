@@ -1,4 +1,4 @@
-JFDML JFormDesigner: "8.1.1.0.298" Java: "17.0.7" encoding: "UTF-8"
+JFDML JFormDesigner: "8.2.1.0.348" Java: "17.0.9" encoding: "UTF-8"
 
 new FormModel {
 	contentType: "form/swing"
@@ -14,7 +14,7 @@ new FormModel {
 			"preferredSize": new java.awt.Dimension( 420, 280 )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
 				"$columnSpecs": "default, labelcompgap, default:grow, labelcompgap, default"
-				"$rowSpecs": "default, linegap, default, linegap, default, linegap, default"
+				"$rowSpecs": "default, linegap, default, linegap, default, linegap, default, linegap, default"
 			} ) {
 				name: "inputs"
 				"border": new javax.swing.border.EmptyBorder( 8, 8, 8, 8 )
@@ -81,6 +81,27 @@ new FormModel {
 					"gridX": 5
 					"gridY": 5
 				} )
+				add( new FormComponent( "javax.swing.JLabel" ) {
+					name: "defaultActionLabel"
+					"text": "Default action:"
+				}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+					"gridX": 1
+					"gridY": 7
+				} )
+				add( new FormComponent( "javax.swing.JComboBox" ) {
+					name: "defaultActionComboBox"
+					"model": new javax.swing.DefaultComboBoxModel {
+						selectedItem: "<No action>"
+						addElement( "<No action>" )
+						addElement( "Update then run Recaf" )
+						addElement( "Run Recaf" )
+					}
+					addEvent( new FormEvent( "java.awt.event.ItemListener", "itemStateChanged", "onDefaultActionChanged", false ) )
+				}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+					"gridX": 3
+					"gridY": 7
+					"gridWidth": 3
+				} )
 				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
 					"$columnSpecs": "center:default:grow"
 					"$rowSpecs": "default"
@@ -97,7 +118,7 @@ new FormModel {
 						"gridY": 1
 					} )
 				}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
-					"gridY": 7
+					"gridY": 9
 					"gridWidth": 5
 				} )
 			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {

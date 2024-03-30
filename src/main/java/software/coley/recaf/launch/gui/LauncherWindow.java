@@ -8,6 +8,7 @@ import software.coley.recaf.launch.commands.UpdateJavaFX;
 import software.coley.recaf.launch.commands.UpdateRecafFromCI;
 import software.coley.recaf.launch.info.JavaFxVersion;
 import software.coley.recaf.launch.info.RecafVersion;
+import software.coley.recaf.launch.util.Config;
 import software.coley.recaf.launch.util.UpdateResult;
 
 import javax.swing.*;
@@ -16,12 +17,13 @@ import java.awt.*;
 import java.util.EnumSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * Basic launcher window with buttons to update Recaf and its dependencies.
  */
 public class LauncherWindow extends JFrame {
+	private boolean isInitialized;
+
 	private final ExecutorService service = Executors.newCachedThreadPool(r -> {
 		Thread t = new Thread(r);
 		t.setDaemon(true);
@@ -35,7 +37,10 @@ public class LauncherWindow extends JFrame {
 
 		updateJavafxVersionLabel();
 		updateRecafVersionLabel();
+		updateDefaultAction();
 		compatibilityCheck();
+
+		isInitialized = true;
 	}
 
 	/**
@@ -116,8 +121,55 @@ public class LauncherWindow extends JFrame {
 	}
 
 	/**
-	 * Runs Recaf.
+	 * Updates the selected {@link #defaultActionComboBox} based on the current {@link Config#getDefaultAction()} value.
 	 */
+	private void updateDefaultAction() {
+		String tooltip = "<html>" +
+				"<head><style>\n" +
+				".code {\n" +
+				"  font-family: monospace;\n" +
+				"  font-weight: bold;\n" +
+				"  background-color: rgba(0, 0, 0, 0.1);\n" +
+				"  background-image: none;\n" +
+				"  border-color: rgba(140, 130, 115, 0.8);\n" +
+				"}" +
+				"</style></head>" +
+				"The default action will only be used when executed from <span class=\"code\">java</span>." +
+				"<p/>" +
+				"Using <span class=\"code\">javaw</span> will always open this user interface.</html>";
+		defaultActionComboBox.setToolTipText(tooltip);
+		defaultActionLabel.setToolTipText(tooltip);
+
+		String defaultAction = Config.getInstance().getDefaultAction();
+		if (defaultAction == null) return;
+		else if (defaultAction.startsWith("auto")) defaultActionComboBox.setSelectedIndex(1);
+		else if (defaultAction.startsWith("run")) defaultActionComboBox.setSelectedIndex(2);
+	}
+
+	/**
+     * Update {@link Config#getDefaultAction()}.
+     */
+	private void onDefaultActionChanged() {
+		if (!isInitialized) return;
+		String defaultAction;
+		int selectedIndex = defaultActionComboBox.getSelectedIndex();
+		switch (selectedIndex) {
+			case 1:
+				defaultAction = "auto";
+				break;
+			case 2:
+				defaultAction = "run";
+				break;
+			default: // covers '0'
+				defaultAction = null;
+				break;
+		}
+		Config.getInstance().setDefaultAction(defaultAction);
+	}
+
+	/**
+     * Runs Recaf.
+     */
 	private void launch() {
 		Run.RunResult runResult = Run.run(false, null);
 		if (runResult.isSuccess())
@@ -140,6 +192,8 @@ public class LauncherWindow extends JFrame {
 		compatibilityLabel = new JLabel();
 		compatibilityValueLabel = new JLabel();
 		compatibilityCheckButton = new JButton();
+		defaultActionLabel = new JLabel();
+		defaultActionComboBox = new JComboBox<>();
 		actionsPanel = new JPanel();
 		launchButton = new JButton();
 		outputs = new JPanel();
@@ -161,14 +215,14 @@ public class LauncherWindow extends JFrame {
 			inputs.setBorder(new EmptyBorder(8, 8, 8, 8));
 			inputs.setLayout(new FormLayout(
 				"default, $lcgap, default:grow, $lcgap, default",
-				"3*(default, $lgap), default"));
+				"4*(default, $lgap), default"));
 
 			//---- recafVersionLabel ----
 			recafVersionLabel.setText("Recaf Version:");
 			inputs.add(recafVersionLabel, CC.xy(1, 1));
 
 			//---- recafVersionValueLabel ----
-			recafVersionValueLabel.setText("<pending...>");
+			recafVersionValueLabel.setText("UNKNOWN");
 			inputs.add(recafVersionValueLabel, CC.xy(3, 1));
 
 			//---- recafVersionUpdateButton ----
@@ -181,7 +235,7 @@ public class LauncherWindow extends JFrame {
 			inputs.add(jfxVersionLabel, CC.xy(1, 3));
 
 			//---- jfxVersionValueLabel ----
-			jfxVersionValueLabel.setText("<pending...>");
+			jfxVersionValueLabel.setText("UNKNOWN");
 			inputs.add(jfxVersionValueLabel, CC.xy(3, 3));
 
 			//---- jfxVersionUpdateButton ----
@@ -194,13 +248,26 @@ public class LauncherWindow extends JFrame {
 			inputs.add(compatibilityLabel, CC.xy(1, 5));
 
 			//---- compatibilityValueLabel ----
-			compatibilityValueLabel.setText("<pending...>");
+			compatibilityValueLabel.setText("UNKNOWN");
 			inputs.add(compatibilityValueLabel, CC.xy(3, 5));
 
 			//---- compatibilityCheckButton ----
 			compatibilityCheckButton.setText("Recheck");
 			compatibilityCheckButton.addActionListener(e -> compatibilityCheck());
 			inputs.add(compatibilityCheckButton, CC.xy(5, 5));
+
+			//---- defaultActionLabel ----
+			defaultActionLabel.setText("Default action:");
+			inputs.add(defaultActionLabel, CC.xy(1, 7));
+
+			//---- defaultActionComboBox ----
+			defaultActionComboBox.setModel(new DefaultComboBoxModel<>(new String[] {
+				"<No action>",
+				"Update then run Recaf",
+				"Run Recaf"
+			}));
+			defaultActionComboBox.addItemListener(e -> onDefaultActionChanged());
+			inputs.add(defaultActionComboBox, CC.xywh(3, 7, 3, 1));
 
 			//======== actionsPanel ========
 			{
@@ -215,7 +282,7 @@ public class LauncherWindow extends JFrame {
 				launchButton.addActionListener(e -> launch());
 				actionsPanel.add(launchButton, CC.xy(1, 1));
 			}
-			inputs.add(actionsPanel, CC.xywh(1, 7, 5, 1));
+			inputs.add(actionsPanel, CC.xywh(1, 9, 5, 1));
 		}
 		contentPane.add(inputs, CC.xy(1, 1));
 
@@ -254,6 +321,8 @@ public class LauncherWindow extends JFrame {
 	private JLabel compatibilityLabel;
 	private JLabel compatibilityValueLabel;
 	private JButton compatibilityCheckButton;
+	private JLabel defaultActionLabel;
+	private JComboBox<String> defaultActionComboBox;
 	private JPanel actionsPanel;
 	private JButton launchButton;
 	private JPanel outputs;

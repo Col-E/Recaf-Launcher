@@ -24,6 +24,7 @@ public class Config {
 
 	private Instant lastUpdate = Instant.EPOCH;
 	private Duration updateCheckRate = Duration.ofMinutes(30);
+	private String defaultAction;
 
 	private Config() {
 		// Deny construction
@@ -88,6 +89,22 @@ public class Config {
 		return updateCheckRate;
 	}
 
+	/**
+	 * @return Default action to run if nothing is specified. Defaults to {@code null}.
+	 */
+	public String getDefaultAction() {
+		return defaultAction;
+	}
+
+	/**
+	 * @param defaultAction
+	 * 		Default action to run if nothing is specified.
+	 */
+	public void setDefaultAction(String defaultAction) {
+		this.defaultAction = defaultAction;
+		save();
+	}
+
 	private void load() {
 		Path path = CommonPaths.getLauncherConfigFile();
 		if (Files.isRegularFile(path)) {
@@ -96,10 +113,13 @@ public class Config {
 				JsonObject configObj = Json.parse(configJson).asObject();
 				String lastUpdateTimeStr = configObj.getString("last-update", null);
 				String upateCheckRateStr = configObj.getString("update-check-rate", null);
+				String defaultActionStr = configObj.getString("default-action", null);
 				if (lastUpdateTimeStr != null)
 					lastUpdate = Instant.parse(lastUpdateTimeStr);
 				if (upateCheckRateStr != null)
 					updateCheckRate = Duration.parse(upateCheckRateStr);
+				if (defaultActionStr != null)
+					defaultAction = defaultActionStr;
 			} catch (Throwable t) {
 				logger.error("Could not read launcher config contents", t);
 				path.toFile().deleteOnExit();
@@ -112,6 +132,8 @@ public class Config {
 		JsonObject object = Json.object();
 		object.set("last-update", lastUpdate.toString());
 		object.set("update-check-rate", updateCheckRate.toString());
+		if (defaultAction != null)
+			object.set("default-action", defaultAction);
 		try {
 			Path launcherDir = CommonPaths.getLauncherDir();
 			if (!Files.isDirectory(launcherDir))
