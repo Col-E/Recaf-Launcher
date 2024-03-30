@@ -81,3 +81,14 @@ Usage: <launcher> update-jfx [-cfk] [-maxc=<maxCacheCount>]
 ```
 Usage: <launcher> version
 ```
+
+### Setting a default action
+ - Allows specifying a default action to run when no arguments are specified. 
+   For commands with spaces in them, surround the whole command with quotes.
+   - Useful case: `set-default-action auto` - This will make the launcher immediately update Recaf and run it
+     without any additional user input required.
+ - Only acknowledged when running the launcher via `java` as `javaw` will open the GUI.
+```
+Usage: <launcher> set-default-action <action>
+     <action>   The action to run. Should match one of the launcher commands.
+```
