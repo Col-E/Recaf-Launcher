@@ -9,7 +9,7 @@ import software.coley.recaf.launch.info.JavaFxPlatform;
 import software.coley.recaf.launch.info.JavaFxVersion;
 import software.coley.recaf.launch.info.RecafVersion;
 import software.coley.recaf.launch.info.SystemInformation;
-import software.coley.recaf.launch.util.Config;
+import software.coley.recaf.launch.util.DefaultAction;
 
 import javax.swing.*;
 import java.util.Map;
@@ -41,25 +41,13 @@ public class Launcher {
 				return;
 			}
 
-			// If the user has specified a default action, reset the args to that.
-			// Otherwise, tell
-			String defaultAction = Config.getInstance().getDefaultAction();
-			if (defaultAction != null) {
-				args = new String[]{defaultAction};
-			} else {
-				logger.info("\n" +
-						"===============================================================\n" +
-						"You did not provide any launch arguments, or specify a default" +
-						"to run in the launcher config.\n\n" +
-						"You can open the GUI by running with 'javaw' instead of 'java'.\n" +
-						"If you meant to provide launch arguments, their usage is below.\n" +
-						"===============================================================\n\n");
-			}
+			// Run the default action handler.
+			DefaultAction.handleDefaultAction();
+			return;
 		}
 
 		// Run the console commands.
-		CommandLine cmd = new CommandLine(new Root());
-		cmd.execute(args);
+		new CommandLine(new Root()).execute(args);
 	}
 
 	public static String dumpInfo() {

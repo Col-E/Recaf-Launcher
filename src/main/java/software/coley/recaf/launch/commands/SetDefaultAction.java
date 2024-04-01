@@ -40,6 +40,7 @@ public class SetDefaultAction implements Callable<Void> {
 		// Set it if it matches.
 		if (commandNames.contains(action)) {
 			Config.getInstance().setDefaultAction(action);
+			logger.info("Successfully set default action");
 		} else {
 			logger.error("The value '" + action + "' did not match any existing command name.\n" +
 					"The available commands are:\n" +
