@@ -25,7 +25,7 @@ public class DefaultAction {
 		} else {
 			logger.info("\n" +
 					"===============================================================\n" +
-					"You did not provide any launch arguments, or specify a default" +
+					"You did not provide any launch arguments, or specify a default\n" +
 					"to run in the launcher config.\n\n" +
 					"You can open the GUI by running with 'javaw' instead of 'java'.\n" +
 					"If you meant to provide launch arguments, their usage is below.\n" +
