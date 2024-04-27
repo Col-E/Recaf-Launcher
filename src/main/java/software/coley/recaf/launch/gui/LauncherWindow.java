@@ -13,7 +13,8 @@ import software.coley.recaf.launch.util.UpdateResult;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.Container;
+import java.awt.Dimension;
 import java.util.EnumSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,8 +59,15 @@ public class LauncherWindow extends JFrame {
 	 */
 	private void updateJavafxVersionLabel() {
 		service.submit(() -> {
-			JavaFxVersion jfxVersion = JavaFxVersion.getLocalVersion();
-			jfxVersionValueLabel.setText("<html>" + (jfxVersion == null ? "<span style=\"color:red;\">Not installed</span>" : jfxVersion) + "</html>");
+			JavaFxVersion jfxVersion;
+			int jfxRuntimeVersion = JavaFxVersion.getRuntimeVersion();
+			if (jfxRuntimeVersion > 0) {
+				jfxVersion = new JavaFxVersion(jfxRuntimeVersion);
+				jfxVersionValueLabel.setText("<html>" + jfxVersion + "<span style=\"font-style: italic;\"> (Bundled by JDK)</span></html>");
+			} else {
+				jfxVersion = JavaFxVersion.getLocalVersion();
+				jfxVersionValueLabel.setText("<html>" + (jfxVersion == null ? "<span style=\"color:red;\">Not installed</span>" : jfxVersion) + "</html>");
+			}
 		});
 	}
 
@@ -147,8 +155,8 @@ public class LauncherWindow extends JFrame {
 	}
 
 	/**
-     * Update {@link Config#getDefaultAction()}.
-     */
+	 * Update {@link Config#getDefaultAction()}.
+	 */
 	private void onDefaultActionChanged() {
 		if (!isInitialized) return;
 		String defaultAction;
@@ -168,8 +176,8 @@ public class LauncherWindow extends JFrame {
 	}
 
 	/**
-     * Runs Recaf.
-     */
+	 * Runs Recaf.
+	 */
 	private void launch() {
 		Run.RunResult runResult = Run.run(false, null);
 		if (runResult.isSuccess())

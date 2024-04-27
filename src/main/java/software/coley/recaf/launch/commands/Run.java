@@ -58,10 +58,19 @@ public class Run implements Callable<Run.RunResult> {
 		}
 
 		JavaFxPlatform javaFxPlatform = JavaFxPlatform.detect();
-		JavaFxVersion javaFxVersion = JavaFxVersion.getLocalVersion();
+		JavaFxVersion javaFxVersion;
+		int javaFxRuntimeVersion = JavaFxVersion.getRuntimeVersion();
+		if (javaFxRuntimeVersion > 0) {
+			javaFxVersion = new JavaFxVersion(javaFxRuntimeVersion);
+		} else {
+			javaFxVersion = JavaFxVersion.getLocalVersion();
+		}
+
+		// Ensure a version was chosen.
 		if (javaFxVersion == null) {
 			logger.error("No local cached version of JavaFX found.\n" +
-					"- Try running with 'update-jfx'");
+					"- Try running with 'update-jfx'\n" +
+					"- Or use a JDK that bundles JavaFX");
 			return RunResult.ERR_NO_JFX;
 		}
 
@@ -69,18 +78,22 @@ public class Run implements Callable<Run.RunResult> {
 			// Build classpath:
 			//  - Recaf jar
 			//  - JavaFX jars
-			Path dependenciesDir = CommonPaths.getDependenciesDir();
-			if (!Files.isDirectory(dependenciesDir)) return RunResult.ERR_NO_JFX;
-			List<Path> javafxDependencies = Files.list(dependenciesDir)
-					.filter(path -> {
-						String fileName = path.getFileName().toString();
-						return fileName.contains(javaFxVersion.getVersion() + "-" + javaFxPlatform.getClassifier());
-					})
-					.map(recafDirectory::relativize)
-					.collect(Collectors.toList());
 			List<Path> classpathItems = new ArrayList<>();
 			classpathItems.add(recafDirectory.relativize(CommonPaths.getRecafJar()));
-			classpathItems.addAll(javafxDependencies);
+			if (javaFxRuntimeVersion > 0) {
+				// If the current runtime has JavaFX we don't need to include the dependencies dir.
+				// The runtime should provide JavaFX's classes and native libraries.
+				Path dependenciesDir = CommonPaths.getDependenciesDir();
+				if (!Files.isDirectory(dependenciesDir)) return RunResult.ERR_NO_JFX;
+				List<Path> javafxDependencies = Files.list(dependenciesDir)
+						.filter(path -> {
+							String fileName = path.getFileName().toString();
+							return fileName.contains(javaFxVersion.getVersion() + "-" + javaFxPlatform.getClassifier());
+						})
+						.map(recafDirectory::relativize)
+						.collect(Collectors.toList());
+				classpathItems.addAll(javafxDependencies);
+			}
 
 			// Build classpath string.
 			String classpath = classpathItems.stream()
