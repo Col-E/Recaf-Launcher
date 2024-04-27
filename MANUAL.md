@@ -2,7 +2,7 @@
 
 To install and launch Recaf 4.X without the launcher here's the process to follow:
 
-## Step 1: Download Java 17 or higher
+## Step 1: Download Java 22 or higher
 
 You can get OpenJDK from a variety of vendors. We recommend [_Adoptium_](https://adoptium.net/). You should be able to just click on the big _"Latest LTS Release"_ button to automatically get what you need. Otherwise, pick the _"Other platforms and versions"_ button and pick a specific JDK installer.
 
@@ -31,6 +31,7 @@ You will need to download the four JavaFX artifacts suited for your operating sy
    - The newest version you can choose depends on your version of Java installed. JavaFX occasionally updates what version of Java it targets.
      - JFX 21 requires Java 17+
      - JFX 23 requires Java 21+
+     - You can check the [JFX release notes](https://github.com/openjdk/jfx/tree/master/doc-files) to see whenever they bump the minimum target JDK version.
 2. There will be a row labeled `Files`. Select `View All`. 
    - This will show you the list of each platform-specific release for the given version. 
    - Pick the appropriate platform for your operating system. You can find a flow-chart helper below.

@@ -43,7 +43,7 @@ public class JavaFxVersion implements Version {
 	 */
 	public static final int MIN_SUGGESTED = 21;
 	public static final NavigableMap<Integer, Integer> JFX_SUPPORTED_JDK_MAP = new TreeMap<>(Map.of(
-			0, 17, // Base case, Recaf does not go below JDK 17
+			0, 17, // Base case
 			23, 21 // JavaFX 23 requires Java 21 or higher
 	));
 	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";

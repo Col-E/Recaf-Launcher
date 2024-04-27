@@ -55,7 +55,7 @@ public class Compatibility implements Callable<Boolean> {
 			for (CompatibilityProblem problem : problems)
 				sb.append(" - ").append(problem.getMessage());
 			if (!skipSuggestions)
-				sb.append("\nSuggestions:\n - Install OpenJDK 17 or higher from https://adoptium.net/temurin/releases/");
+				sb.append("\nSuggestions:\n - Install OpenJDK 22 or higher from https://adoptium.net/temurin/releases/");
 			logger.warn(sb.toString());
 			return false;
 		}
@@ -73,10 +73,10 @@ public class Compatibility implements Callable<Boolean> {
 		if (javaVersion == JavaVersion.UNKNOWN_VERSION) {
 			// Shouldn't happen, Java version should always be resolvable
 			set.add(CompatibilityProblem.UNKNOWN_JAVA_VERSION);
-		} else if (javaVersion < 17) {
+		} else if (javaVersion < 22) {
 			// Recaf 2: 8+
 			// Recaf 3: 11+
-			// Recaf 4: 17+
+			// Recaf 4: 22+
 			set.add(CompatibilityProblem.OUTDATED_JAVA_VERSION);
 		}
 
@@ -110,7 +110,7 @@ public class Compatibility implements Callable<Boolean> {
 	 */
 	public enum CompatibilityProblem {
 		UNKNOWN_JAVA_VERSION(() -> "Unknown Java version"),
-		OUTDATED_JAVA_VERSION(() -> "Outdated Java version (" + JavaVersion.get() + "), requires 17+"),
+		OUTDATED_JAVA_VERSION(() -> "Outdated Java version (" + JavaVersion.get() + "), requires 22+"),
 		OUTDATED_BUNDLED_JAVA_FX(() -> "Outdated JavaFX bundled in Java Runtime (" + JavaFxVersion.getRuntimeVersion() + ")"),
 		BUNDLED_JAVA_FX(() -> "JavaFX bundled in Java Runtime (" + JavaFxVersion.getRuntimeVersion() + ")");
 
