@@ -4,9 +4,13 @@ A simple solution for running Recaf.
 
 ## Usage
 
-All usage assumes you are running the command similar to `java -jar launcher.jar ...`:
+All ***command line*** usage assumes you are running the command similar to `java -jar launcher.jar ...`:
  - Where `launcher.jar` is the file name you saved the launcher as.
  - Where `...` includes additional arguments, details of which can be found below.
+
+All ***graphical user interface*** usage assumes you are running the application via `javaw -jar launcher.jar`
+ - The GUI is shown automatically when no `std-out` is found, this occurs when using `javaw` instead of `java`
+ - The CLI can be used even with `javaw` when specifying `--headless`
 
 ### Auto
  - Checks local system compatibility
