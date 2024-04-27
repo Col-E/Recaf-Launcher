@@ -6,6 +6,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import software.coley.recaf.launch.info.JavaFxVersion;
 import software.coley.recaf.launch.info.JavaVersion;
+import software.coley.recaf.launch.info.PlatformType;
 
 import java.util.EnumSet;
 import java.util.concurrent.Callable;
@@ -54,8 +55,10 @@ public class Compatibility implements Callable<Boolean> {
 					"Multiple problems were found that may lead to incompatibilities with Recaf");
 			for (CompatibilityProblem problem : problems)
 				sb.append(" - ").append(problem.getMessage());
-			if (!skipSuggestions)
-				sb.append("\nSuggestions:\n - Install OpenJDK 22 or higher from https://adoptium.net/temurin/releases/");
+			if (!skipSuggestions) {
+				String suffix = PlatformType.isLinux() ? " or your package manager" : "";
+				sb.append("\nSuggestions:\n - Install OpenJDK 22 or higher from https://adoptium.net/temurin/releases/").append(suffix);
+			}
 			logger.warn(sb.toString());
 			return false;
 		}
