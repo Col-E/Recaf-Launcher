@@ -6,7 +6,7 @@
 
     <groupId>software.coley</groupId>
     <artifactId>recaf-launcher</artifactId>
-    <version>0.4.0</version> <!-- 1.0.0 will become the version when Recaf 4x becomes the master branch -->
+    <version>0.4.1</version> <!-- 1.0.0 will become the version when Recaf 4x becomes the master branch -->
 
     <name>Recaf Launcher</name>
     <description>A command line for launching Recaf</description>

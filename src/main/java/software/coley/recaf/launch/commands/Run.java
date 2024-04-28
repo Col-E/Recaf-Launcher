@@ -80,7 +80,7 @@ public class Run implements Callable<Run.RunResult> {
 			//  - JavaFX jars
 			List<Path> classpathItems = new ArrayList<>();
 			classpathItems.add(recafDirectory.relativize(CommonPaths.getRecafJar()));
-			if (javaFxRuntimeVersion > 0) {
+			if (javaFxRuntimeVersion < 0) {
 				// If the current runtime has JavaFX we don't need to include the dependencies dir.
 				// The runtime should provide JavaFX's classes and native libraries.
 				Path dependenciesDir = CommonPaths.getDependenciesDir();
