@@ -12,3 +12,7 @@ dependencies {
 application {
     mainClass = 'software.coley.recaf.launcher.LauncherGui'
 }
+
+shadowJar{
+    archiveFileName = "recaf-${project.name}-${project.version}.jar"
+}

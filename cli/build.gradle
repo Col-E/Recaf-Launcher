@@ -17,3 +17,7 @@ compileJava {
 application {
     mainClass = 'software.coley.recaf.launcher.LauncherCli'
 }
+
+shadowJar{
+    archiveFileName = "recaf-${project.name}-${project.version}.jar"
+}
