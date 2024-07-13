@@ -1,0 +1,203 @@
+JFDML JFormDesigner: "8.2.3.0.386" Java: "17.0.9" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+			name: "this"
+			"border": new javax.swing.border.EmptyBorder( 8, 8, 8, 8 )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
+				"$columnSpecs": "default, labelcompgap, default:grow, labelcompgap, default"
+				"$rowSpecs": "default"
+			} ) {
+				name: "bottomNavPanel"
+				"border": new javax.swing.border.EmptyBorder( 8, 0, 0, 0 )
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+				add( new FormComponent( "javax.swing.JButton" ) {
+					name: "prevButton"
+					"text": "Previous"
+					"visible": false
+					addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "onPrev", false ) )
+				}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+					"gridX": 1
+					"gridY": 1
+				} )
+				add( new FormComponent( "javax.swing.JButton" ) {
+					name: "nextButton"
+					"text": "Next"
+					addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "onNext", false ) )
+				}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+					"gridX": 5
+					"gridY": 1
+				} )
+			}, new FormLayoutConstraints( class java.lang.String ) {
+				"value": "South"
+			} )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.CardLayout ) ) {
+				name: "cardHolderPanel"
+			}, new FormLayoutConstraints( class java.lang.String ) {
+				"value": "Center"
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 5, 0 )
+			"size": new java.awt.Dimension( 400, 300 )
+		} )
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
+			"$columnSpecs": "default, labelcompgap, default, labelcompgap, default:grow"
+			"$rowSpecs": "12dlu, linegap, default, linegap, default, linegap, default, linegap, fill:default:grow, linegap, default"
+		} ) {
+			name: "cardOpen"
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "whenOpenLabel"
+				"text": "When I open this launcher I want to:"
+				"font": new com.jformdesigner.model.SwingDerivedFont( null, 1, 0, false )
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridHeight": 2
+				"gridWidth": 5
+			} )
+			add( new FormComponent( "javax.swing.JRadioButton" ) {
+				name: "letMeChooseRadio"
+				"text": "Let me choose what to do"
+				"selected": true
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JRadioButton" ) {
+				name: "updateRunRadio"
+				"text": "Update then run Recaf, do not show the launcher"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 5
+			} )
+			add( new FormComponent( "javax.swing.JRadioButton" ) {
+				name: "runRadio"
+				"text": "Run Recaf, do not show the launcher"
+				"enabled": false
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 7
+			} )
+			add( new FormComponent( "javax.swing.JCheckBox" ) {
+				name: "enableBadOptionsCheck"
+				"text": "Enable bad options"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridY": 11
+				"gridX": 5
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 5, 545 )
+			"size": new java.awt.Dimension( 400, 150 )
+		} )
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
+			"$columnSpecs": "default, labelcompgap, default, labelcompgap, default:grow"
+			"$rowSpecs": "12dlu, linegap, default, linegap, default, linegap, default"
+		} ) {
+			name: "cardInstalls"
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "launchWithLabel"
+				"text": "Launch Recaf with this version of Java:"
+				"font": new com.jformdesigner.model.SwingDerivedFont( null, 1, 0, false )
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridWidth": 5
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "installLabel"
+				"text": "Installation"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JComboBox" ) {
+				name: "installCombo"
+				auxiliary() {
+					"JavaCodeGenerator.typeParameters": "JavaInstall"
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "customLabel"
+				"text": "Add custom"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 5
+			} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "browseInstallButton"
+				"text": "Browse"
+				"icon": new com.jformdesigner.model.SwingIcon( 0, "/images/select.png" )
+				addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "browseForInstall", false ) )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 5
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "requirementsLabel"
+				"text": "Requirements:"
+				"enabled": false
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 7
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 5, 705 )
+			"size": new java.awt.Dimension( 400, 125 )
+		} )
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
+			"$columnSpecs": "center:default:grow"
+			"$rowSpecs": "default, linegap, default, linegap, default"
+		} ) {
+			name: "cardWelcome"
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "logoLabel"
+				"icon": new com.jformdesigner.model.SwingIcon( 0, "/images/logo.png" )
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 1
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "welcomeLabel"
+				"text": "Welcome to the 4.X launcher"
+				"font": new com.jformdesigner.model.SwingDerivedFont( null, 1, 0, false )
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "noticeLabel"
+				"text": "This setup will only appear once"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 5
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 5, 320 )
+			"size": new java.awt.Dimension( 400, 200 )
+		} )
+	}
+}

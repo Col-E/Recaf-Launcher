@@ -1,0 +1,153 @@
+JFDML JFormDesigner: "8.2.3.0.386" Java: "17.0.9" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.CardLayout ) ) {
+			name: "this"
+			"border": new javax.swing.border.EmptyBorder( 8, 8, 8, 8 )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 0 )
+			"size": new java.awt.Dimension( 320, 45 )
+		} )
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
+			"$columnSpecs": "default, labelcompgap, default:grow, labelcompgap, default"
+			"$rowSpecs": "default, linegap, default, linegap, default, linegap, default, linegap, default, linegap, top:default:grow"
+		} ) {
+			name: "versionsCard"
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "recafVersionPrefix"
+				"text": "Recaf Version:"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 1
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "recafVersionLabel"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 1
+			} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "updateRecafButton"
+				"text": "Update"
+				"icon": new com.jformdesigner.model.SwingIcon( 0, "/images/down.png" )
+				addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "updateRecaf", false ) )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 1
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "javafxVersionPrefix"
+				"text": "JavaFX Version:"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "javafxVersionLabel"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "updateJavafxButton"
+				"text": "Update"
+				"icon": new com.jformdesigner.model.SwingIcon( 0, "/images/down.png" )
+				addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "updateJavafx", false ) )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "installLabel"
+				"text": "Java Version:"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 5
+			} )
+			add( new FormComponent( "javax.swing.JComboBox" ) {
+				name: "installCombo"
+				auxiliary() {
+					"JavaCodeGenerator.typeParameters": "JavaInstall"
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 3
+				"gridY": 5
+			} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "browseInstallButton"
+				"text": "Browse"
+				"icon": new com.jformdesigner.model.SwingIcon( 0, "/images/select.png" )
+				addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "browseForInstall", false ) )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 5
+			} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "launchButton"
+				"text": "Launch"
+				"icon": new com.jformdesigner.model.SwingIcon( 0, "/images/run.png" )
+				addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "launch", false ) )
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 5
+				"gridY": 7
+			} )
+			add( new FormComponent( "com.jformdesigner.designer.wrapper.JGoodiesFormsSeparator" ) {
+				name: "compatibilitySeparator"
+				"text": "Compatibility"
+				"visible": false
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridY": 9
+				"gridWidth": 5
+			} )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class javax.swing.BoxLayout ) {
+				"axis": 1
+			} ) {
+				name: "compatibilityOutputPanel"
+				"visible": false
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridY": 11
+				"gridWidth": 5
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 60 )
+			"size": new java.awt.Dimension( 320, 200 )
+		} )
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
+			"$columnSpecs": "center:default:grow"
+			"$rowSpecs": "default:grow, linegap, default, linegap, default, linegap, default:grow"
+		} ) {
+			name: "feedbackCard"
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "feedbackLabel"
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 3
+			} )
+			add( new FormComponent( "javax.swing.JProgressBar" ) {
+				name: "feedbackProgressBar"
+				"indeterminate": true
+				"value": -1
+			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
+				"gridX": 1
+				"gridY": 5
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 275 )
+			"size": new java.awt.Dimension( 320, 190 )
+		} )
+	}
+}

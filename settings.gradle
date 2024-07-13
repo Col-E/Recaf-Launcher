@@ -1,0 +1,12 @@
+rootProject.name = 'recaf-launcher'
+
+include 'core'
+include 'cli'
+include 'gui'
+
+buildCache {
+    local {
+        enabled = true
+        directory = new File('build/cache')
+    }
+}

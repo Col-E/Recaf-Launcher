@@ -1,5 +1,8 @@
 target/
+build/
+out/
 .idea/
+.gradle/
 *.iml
 *.log
 dependency-reduced-pom.xml
