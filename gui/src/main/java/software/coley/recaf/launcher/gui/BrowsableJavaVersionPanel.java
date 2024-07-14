@@ -9,8 +9,7 @@ import software.coley.recaf.launcher.task.JavaEnvTasks;
 
 import javax.annotation.Nonnull;
 import javax.swing.*;
-import java.awt.Component;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -65,42 +64,52 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 	 * Prompts the user to select a Java executable, and adds it to {@link #getInstallCombo()}.
 	 */
 	protected void onBrowseForInstall() {
-		JFileChooser chooser = new JFileChooser();
+		FileDialog dialog = new FileDialog((Frame) null);
 		if (lastJavaInstallSelectionDir != null)
-			chooser.setCurrentDirectory(lastJavaInstallSelectionDir);
+			dialog.setDirectory(lastJavaInstallSelectionDir.getAbsolutePath());
 		String targetFile = PlatformType.isWindows() ? "java.exe" : "java";
-		chooser.setDialogTitle("Select a '" + targetFile + "' executable");
-		if (chooser.showOpenDialog(getBrowseButton()) == JFileChooser.APPROVE_OPTION) {
-			Path selectedPath = chooser.getSelectedFile().toPath();
-			if (JavaEnvTasks.addJavaInstall(selectedPath)) {
-				// Validate the selected installation was a compatible version
-				JavaInstall install = JavaEnvTasks.getByPath(selectedPath);
-				if (install != null) {
-					int version = install.getVersion();
-					if (version < JavaVersion.MIN_COMPATIBLE) {
-						String message = "The selected Java executable only supports up to: " + version +
-								"\nThe minimum required version is: " + JavaVersion.MIN_COMPATIBLE;
-						JOptionPane.showMessageDialog(null, message, "Incompatible selection", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
-						Toolkit.getDefaultToolkit().beep();
-						return;
-					}
 
-					// Set this as the selected version to run with.
-					JComboBox<JavaInstall> combo = getInstallCombo();
-					ComboBoxModel<JavaInstall> model = combo.getModel();
-					if (model instanceof DefaultComboBoxModel) {
-						model.setSelectedItem(install);
-					}
+		dialog.setTitle("Select a '" + targetFile + "' executable");
+		dialog.setFilenameFilter((dir, name) -> name.equalsIgnoreCase(targetFile));
+		dialog.setMode(FileDialog.LOAD);
+		dialog.setVisible(true);
+
+		if (dialog.getFile() == null) {
+			return;
+		}
+
+		File chosenFile = new File(dialog.getDirectory(), dialog.getFile());
+		dialog.dispose();
+
+		Path selectedPath = chosenFile.toPath();
+		if (JavaEnvTasks.addJavaInstall(selectedPath)) {
+			// Validate the selected installation was a compatible version
+			JavaInstall install = JavaEnvTasks.getByPath(selectedPath);
+			if (install != null) {
+				int version = install.getVersion();
+				if (version < JavaVersion.MIN_COMPATIBLE) {
+					String message = "The selected Java executable only supports up to: " + version +
+							"\nThe minimum required version is: " + JavaVersion.MIN_COMPATIBLE;
+					JOptionPane.showMessageDialog(null, message, "Incompatible selection", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
+					Toolkit.getDefaultToolkit().beep();
+					return;
 				}
 
-				// Refresh the combo-model list.
-				repopulateInstallModel(false);
-			} else {
-				JOptionPane.showMessageDialog(null, "The selected file was not a Java executable", "Incompatible selection", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
-				Toolkit.getDefaultToolkit().beep();
+				// Set this as the selected version to run with.
+				JComboBox<JavaInstall> combo = getInstallCombo();
+				ComboBoxModel<JavaInstall> model = combo.getModel();
+				if (model instanceof DefaultComboBoxModel) {
+					model.setSelectedItem(install);
+				}
 			}
+
+			// Refresh the combo-model list.
+			repopulateInstallModel(false);
+		} else {
+			JOptionPane.showMessageDialog(null, "The selected file was not a Java executable", "Incompatible selection", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
+			Toolkit.getDefaultToolkit().beep();
 		}
-		lastJavaInstallSelectionDir = chooser.getCurrentDirectory();
+		lastJavaInstallSelectionDir = chosenFile.getParentFile();
 	}
 
 	/**
