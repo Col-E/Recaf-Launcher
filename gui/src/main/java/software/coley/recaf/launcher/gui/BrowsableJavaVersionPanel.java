@@ -83,6 +83,7 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 
 		// Skip if user cancelled file selection.
 		String selection = dialog.getFile();
+		dialog.dispose(); // Need to dispose of dialog
 		if (selection == null)
 			return;
 
