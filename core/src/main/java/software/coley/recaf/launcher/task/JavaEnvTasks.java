@@ -69,7 +69,7 @@ public class JavaEnvTasks {
 		// Check common install locations.
 		String[] javaRoots = {
 				"/usr/lib/jvm/",
-				"!/.jdks/"
+				"~/.jdks/"
 		};
 		for (String root : javaRoots) {
 			Path rootPath = Paths.get(root);
