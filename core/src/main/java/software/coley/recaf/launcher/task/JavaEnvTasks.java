@@ -60,12 +60,9 @@ public class JavaEnvTasks {
 		if (homeEnv != null) {
 			Path homePath = Paths.get(homeEnv);
 			if (Files.isDirectory(homePath)) {
-				String dirName = homePath.getFileName().toString();
-				int version = JavaVersion.fromVersionString(dirName);
-				if (version >= 8) {
-					Path javaPath = homePath.resolve("bin/java");
-					addJavaInstall(new JavaInstall(javaPath, version));
-				}
+				Path javaPath = homePath.resolve("bin/java");
+				if (Files.exists(javaPath))
+					addJavaInstall(javaPath);
 			}
 		}
 
@@ -80,12 +77,9 @@ public class JavaEnvTasks {
 				try (Stream<Path> subDirStream = Files.list(rootPath)) {
 					subDirStream.filter(subDir -> Files.exists(subDir.resolve("bin/java")))
 							.forEach(subDir -> {
-								String dirName = subDir.getFileName().toString();
-								int version = JavaVersion.fromVersionString(dirName);
-								if (version >= 8) {
-									Path javaPath = subDir.resolve("bin/java");
-									addJavaInstall(new JavaInstall(javaPath, version));
-								}
+								Path javaPath = subDir.resolve("bin/java");
+								if (Files.exists(javaPath))
+									addJavaInstall(javaPath);
 							});
 				} catch (IOException ignored) {
 					// Skip
@@ -108,12 +102,9 @@ public class JavaEnvTasks {
 		if (homeEnv != null) {
 			Path homePath = Paths.get(homeEnv);
 			if (Files.isDirectory(homePath)) {
-				String dirName = homePath.getFileName().toString();
-				int version = JavaVersion.fromVersionString(dirName);
-				if (version >= 8) {
-					Path javaPath = homePath.resolve("bin/java.exe");
-					addJavaInstall(new JavaInstall(javaPath, version));
-				}
+				Path javaPath = homePath.resolve("bin/java.exe");
+				if (Files.exists(javaPath))
+					addJavaInstall(javaPath);
 			}
 		}
 
@@ -145,12 +136,9 @@ public class JavaEnvTasks {
 				try (Stream<Path> subDirStream = Files.list(rootPath)) {
 					subDirStream.filter(subDir -> Files.exists(subDir.resolve("bin/java.exe")))
 							.forEach(subDir -> {
-								String dirName = subDir.getFileName().toString();
-								int version = JavaVersion.fromVersionString(dirName);
-								if (version >= 8) {
-									Path javaPath = subDir.resolve("bin/java.exe");
-									addJavaInstall(new JavaInstall(javaPath, version));
-								}
+								Path javaPath = subDir.resolve("bin/java.exe");
+								if (Files.exists(javaPath))
+									addJavaInstall(javaPath);
 							});
 				} catch (IOException ignored) {
 					// Skip
