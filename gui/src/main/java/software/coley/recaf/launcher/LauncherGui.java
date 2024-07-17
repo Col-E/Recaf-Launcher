@@ -17,10 +17,7 @@ import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GraphicsEnvironment;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -51,6 +48,8 @@ public class LauncherGui {
 		thread.setDaemon(false);
 		thread.start();
 	};
+	/** Recaf icon */
+	public static BufferedImage recafImage;
 	/** Recaf icon */
 	public static Icon recafIcon;
 	/** Flag for when the user is launching this for the first time */
@@ -101,9 +100,9 @@ public class LauncherGui {
 		JFrame frame = new JFrame();
 		frame.setTitle("Recaf Launcher");
 		try {
-			BufferedImage iconImage = ImageIO.read(Objects.requireNonNull(LauncherGui.class.getResource("/images/logo.png")));
-			frame.setIconImage(iconImage);
-			recafIcon = new ImageIcon(iconImage);
+			recafImage = ImageIO.read(Objects.requireNonNull(LauncherGui.class.getResource("/images/logo.png")));
+			frame.setIconImage(recafImage);
+			recafIcon = new ImageIcon(recafImage);
 		} catch (IOException ex) {
 			logger.error("Failed to set launcher icon");
 		}
