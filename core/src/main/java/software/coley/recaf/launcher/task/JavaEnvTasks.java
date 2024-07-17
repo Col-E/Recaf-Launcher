@@ -3,6 +3,7 @@ package software.coley.recaf.launcher.task;
 import software.coley.recaf.launcher.info.JavaInstall;
 import software.coley.recaf.launcher.info.JavaVersion;
 import software.coley.recaf.launcher.info.PlatformType;
+import software.coley.recaf.launcher.util.SymLinks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -37,8 +38,59 @@ public class JavaEnvTasks {
 	public static void scanForJavaInstalls() {
 		if (PlatformType.isWindows()) {
 			scanForWindowsJavaPaths();
+		} else if (PlatformType.isLinux()) {
+			scanForLinuxJavaPaths();
 		} else {
 			// TODO: Support other platforms
+		}
+	}
+
+	/**
+	 * Detect common Java installations on Linux.
+	 */
+	private static void scanForLinuxJavaPaths() {
+		// Check java alternative link.
+		Path altJava = Paths.get("/etc/alternatives/java");
+		if (Files.exists(altJava)) {
+			addJavaInstall(altJava);
+		}
+
+		// Check home
+		String homeEnv = System.getenv("JAVA_HOME");
+		if (homeEnv != null) {
+			Path homePath = Paths.get(homeEnv);
+			if (Files.isDirectory(homePath)) {
+				String dirName = homePath.getFileName().toString();
+				int version = JavaVersion.fromVersionString(dirName);
+				if (version >= 8) {
+					Path javaPath = homePath.resolve("bin/java");
+					addJavaInstall(new JavaInstall(javaPath, version));
+				}
+			}
+		}
+
+		// Check common install locations.
+		String[] javaRoots = {
+				"/usr/lib/jvm/",
+				"!/.jdks/"
+		};
+		for (String root : javaRoots) {
+			Path rootPath = Paths.get(root);
+			if (Files.isDirectory(rootPath)) {
+				try (Stream<Path> subDirStream = Files.list(rootPath)) {
+					subDirStream.filter(subDir -> Files.exists(subDir.resolve("bin/java")))
+							.forEach(subDir -> {
+								String dirName = subDir.getFileName().toString();
+								int version = JavaVersion.fromVersionString(dirName);
+								if (version >= 8) {
+									Path javaPath = subDir.resolve("bin/java");
+									addJavaInstall(new JavaInstall(javaPath, version));
+								}
+							});
+				} catch (IOException ignored) {
+					// Skip
+				}
+			}
 		}
 	}
 
@@ -51,6 +103,7 @@ public class JavaEnvTasks {
 			addJavaInstall(Paths.get(homeProp).resolve("bin/java.exe"));
 		}
 
+		// Check home
 		String homeEnv = System.getenv("JAVA_HOME");
 		if (homeEnv != null) {
 			Path homePath = Paths.get(homeEnv);
@@ -64,6 +117,7 @@ public class JavaEnvTasks {
 			}
 		}
 
+		// Check system path for java entries.
 		String path = System.getenv("PATH");
 		if (path != null) {
 			String[] entries = path.split(";");
@@ -74,7 +128,8 @@ public class JavaEnvTasks {
 				}
 			}
 		}
-		
+
+		// Check common install locations.
 		String[] javaRoots = {
 				"C:/Program Files/Amazon Corretto/",
 				"C:/Program Files/Eclipse Adoptium/",
@@ -112,6 +167,14 @@ public class JavaEnvTasks {
 	 * {@code false} when discarded.
 	 */
 	public static boolean addJavaInstall(@Nonnull Path javaExecutable) {
+		// Resolve sym-links
+		if (Files.isSymbolicLink(javaExecutable)) {
+			javaExecutable = SymLinks.resolveSymLink(javaExecutable);
+			if (javaExecutable == null)
+				return false;
+		}
+
+		// Validate path
 		Path binDir = javaExecutable.getParent();
 		if (binDir == null)
 			return false;
