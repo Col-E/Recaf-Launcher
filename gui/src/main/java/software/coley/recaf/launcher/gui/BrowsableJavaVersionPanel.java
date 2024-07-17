@@ -6,12 +6,18 @@ import software.coley.recaf.launcher.info.JavaInstall;
 import software.coley.recaf.launcher.info.JavaVersion;
 import software.coley.recaf.launcher.info.PlatformType;
 import software.coley.recaf.launcher.task.JavaEnvTasks;
+import software.coley.recaf.launcher.util.SymLinks;
 
 import javax.annotation.Nonnull;
 import javax.swing.*;
-import java.awt.*;
-import java.io.File;
+import java.awt.Component;
+import java.awt.FileDialog;
+import java.awt.Frame;
+import java.awt.Toolkit;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -20,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
  * Common parent class for handling selection of installed Java versions.
  */
 public abstract class BrowsableJavaVersionPanel extends JPanel {
-	private static File lastJavaInstallSelectionDir;
+	private static String lastJavaInstallSelectionDir;
 
 	@Nonnull
 	protected abstract JButton getBrowseButton();
@@ -66,22 +72,34 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 	protected void onBrowseForInstall() {
 		FileDialog dialog = new FileDialog((Frame) null);
 		if (lastJavaInstallSelectionDir != null)
-			dialog.setDirectory(lastJavaInstallSelectionDir.getAbsolutePath());
+			dialog.setDirectory(lastJavaInstallSelectionDir);
 		String targetFile = PlatformType.isWindows() ? "java.exe" : "java";
-
 		dialog.setTitle("Select a '" + targetFile + "' executable");
 		dialog.setFilenameFilter((dir, name) -> name.equalsIgnoreCase(targetFile));
+		dialog.setIconImage(LauncherGui.recafImage);
 		dialog.setMode(FileDialog.LOAD);
+		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 
-		if (dialog.getFile() == null) {
+		// Skip if user cancelled file selection.
+		String selection = dialog.getFile();
+		if (selection == null)
 			return;
+
+		// Build the selection path and follow symbolic links.
+		Path selectedPath = Paths.get(lastJavaInstallSelectionDir = dialog.getDirectory(), selection);
+		if (Files.isSymbolicLink(selectedPath)){
+			// The 'addJavaInstall' handles sym-links but we want to handle it here in case something goes wrong
+			// so that we can be more specific about our reported problem.
+			selectedPath = SymLinks.resolveSymLink(selectedPath);
+			if (selectedPath == null) {
+				JOptionPane.showMessageDialog(null, "The selected sym-link could not be followed to a valid Java executable",
+						"Invalid symbolic link", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
+				Toolkit.getDefaultToolkit().beep();
+				return;
+			}
 		}
 
-		File chosenFile = new File(dialog.getDirectory(), dialog.getFile());
-		dialog.dispose();
-
-		Path selectedPath = chosenFile.toPath();
 		if (JavaEnvTasks.addJavaInstall(selectedPath)) {
 			// Validate the selected installation was a compatible version
 			JavaInstall install = JavaEnvTasks.getByPath(selectedPath);
@@ -109,7 +127,6 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 			JOptionPane.showMessageDialog(null, "The selected file was not a Java executable", "Incompatible selection", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
 			Toolkit.getDefaultToolkit().beep();
 		}
-		lastJavaInstallSelectionDir = chosenFile.getParentFile();
 	}
 
 	/**
