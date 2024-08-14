@@ -191,7 +191,7 @@ public class LauncherGui {
 	 * Downloads the latest Recaf jar.
 	 */
 	public static void updateRecaf() {
-		VersionUpdateResult result = RecafTasks.updateFromSnapshot("dev4");
+		VersionUpdateResult result = RecafTasks.updateFromSnapshot("master");
 
 		// Ensure the update passed
 		Throwable error = result.getError();

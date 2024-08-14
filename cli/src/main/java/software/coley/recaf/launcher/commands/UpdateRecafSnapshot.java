@@ -18,7 +18,7 @@ public class UpdateRecafSnapshot implements Callable<RecafVersion> {
 
 	@Override
 	public RecafVersion call() {
-		VersionUpdateResult result = RecafTasks.updateFromSnapshot("dev4");
+		VersionUpdateResult result = RecafTasks.updateFromSnapshot("master");
 
 		if (result.getError() != null) {
 			logger.error("Encountered error updating Recaf from latest snapshot", result.getError());
