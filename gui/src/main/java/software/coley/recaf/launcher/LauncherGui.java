@@ -1,6 +1,10 @@
 package software.coley.recaf.launcher;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.core.FileAppender;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.coley.recaf.launcher.config.Config;
 import software.coley.recaf.launcher.gui.FirstTimePanel;
 import software.coley.recaf.launcher.gui.MainPanel;
@@ -17,7 +21,10 @@ import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
-import java.awt.*;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -36,7 +43,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *  Entry point class for GUI usage.
+ * Entry point class for GUI usage.
  */
 public class LauncherGui {
 	private static final Logger logger = Loggers.newLogger();
@@ -58,6 +65,7 @@ public class LauncherGui {
 	private static boolean uiContext;
 
 	public static void main(String[] args) {
+		initLogging();
 		switch (config.getLaunchAction()) {
 			case SHOW_LAUNCHER:
 				uiContext = true;
@@ -70,6 +78,53 @@ public class LauncherGui {
 				launch(LauncherFeedback.NOOP, true);
 				break;
 		}
+	}
+
+	/**
+	 * Direct launcher logs to be written to {@code %RECAF%/launcher/launcher-log.txt}.
+	 * We'll only keep the one file which overwrites whenever running the launcher again.
+	 */
+	@SuppressWarnings("all")
+	private static void initLogging() {
+		// Setup appender
+		Path logFile = CommonPaths.getLauncherDir().resolve("launcher-log.txt");
+		if (Files.exists(logFile)) {
+			try {
+				Files.deleteIfExists(logFile);
+			} catch (IOException ex) {
+				logger.error("Failed to delete old log file: {}", logFile, ex);
+			}
+		}
+
+		// We do it this way so the file path can be set at runtime.
+		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+		FileAppender fileAppender = new FileAppender<>();
+		fileAppender.setFile(logFile.toString());
+		fileAppender.setContext(loggerContext);
+		fileAppender.setPrudent(true);
+		fileAppender.setAppend(true);
+		fileAppender.setImmediateFlush(true);
+
+		// Pattern
+		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+		encoder.setContext(loggerContext);
+		encoder.setPattern("%d{HH:mm:ss.SSS} [%logger{0}/%thread] %-5level: %msg%n");
+		encoder.start();
+		fileAppender.setEncoder(encoder);
+
+		// Start file appender
+		fileAppender.start();
+
+		// Create logger
+		ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger)
+				LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+		logbackLogger.addAppender(fileAppender);
+		logbackLogger.setAdditive(false);
+
+		// Set default error handler
+		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+			logger.error("Uncaught exception on thread '{}'", t.getName(), e);
+		});
 	}
 
 	/**
