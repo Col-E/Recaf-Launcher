@@ -8,7 +8,15 @@ import software.coley.recaf.launcher.info.JavaInstall;
 import software.coley.recaf.launcher.info.JavaVersion;
 
 import javax.annotation.Nonnull;
-import javax.swing.*;
+import javax.annotation.Nullable;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -22,8 +30,12 @@ import java.awt.event.ComponentEvent;
  */
 public class FirstTimePanel extends BrowsableJavaVersionPanel {
 	private static final int MAX_CARD = 2;
+	private static final String CARD_WELCOME = "0";
+	private static final String CARD_OPEN = "1";
+	private static final String CARD_INSTALLS = "2";
 	private final Runnable onFinish;
 	private int cardIndex;
+	private String currentCard = CARD_WELCOME;
 
 	public FirstTimePanel(@Nonnull Runnable onFinish) {
 		initComponents();
@@ -55,11 +67,16 @@ public class FirstTimePanel extends BrowsableJavaVersionPanel {
 			}
 		});
 		requirementsLabel.setText("Recaf 4.X requires Java " + JavaVersion.MIN_COMPATIBLE + " or higher");
+		installCombo.addItemListener(e -> {
+			// Prevent moving forward if the target version of Java is too old
+			Object item = installCombo.getSelectedItem();
+			updateAllowNextIfJavaIsTooOld(item);
+		});
 
 		// Setup cards
-		cardHolderPanel.add("0", cardWelcome);
-		cardHolderPanel.add("1", cardOpen);
-		cardHolderPanel.add("2", cardInstalls);
+		cardHolderPanel.add(CARD_WELCOME, cardWelcome);
+		cardHolderPanel.add(CARD_OPEN, cardOpen);
+		cardHolderPanel.add(CARD_INSTALLS, cardInstalls);
 	}
 
 	@Nonnull
@@ -81,6 +98,9 @@ public class FirstTimePanel extends BrowsableJavaVersionPanel {
 		if (cardIndex > 0) {
 			cardIndex--;
 			updateCard();
+
+			// Ensure the 'next' button is accessible.
+			nextButton.setEnabled(true);
 		}
 	}
 
@@ -91,6 +111,11 @@ public class FirstTimePanel extends BrowsableJavaVersionPanel {
 		if (cardIndex < MAX_CARD) {
 			cardIndex++;
 			updateCard();
+
+			// If we moved to the installations card, check if we should allow continuation
+			if (currentCard.equals(CARD_INSTALLS)) {
+				updateAllowNextIfJavaIsTooOld(installCombo.getSelectedItem());
+			}
 		} else {
 			onFinish();
 		}
@@ -124,7 +149,8 @@ public class FirstTimePanel extends BrowsableJavaVersionPanel {
 		nextButton.setText(cardIndex < MAX_CARD ? "Next" : "Finish");
 
 		CardLayout layout = (CardLayout) (cardHolderPanel.getLayout());
-		layout.show(cardHolderPanel, String.valueOf(cardIndex));
+		currentCard = String.valueOf(cardIndex);
+		layout.show(cardHolderPanel, currentCard);
 	}
 
 	/**
@@ -132,9 +158,25 @@ public class FirstTimePanel extends BrowsableJavaVersionPanel {
 	 *
 	 * @see BrowsableJavaVersionPanel
 	 */
-    private void browseForInstall() {
-        onBrowseForInstall();
-    }
+	private void browseForInstall() {
+		onBrowseForInstall();
+	}
+
+	/**
+	 * Updates the {@link #nextButton} to prevent moving forward until a valid version of Java is selected.
+	 *
+	 * @param item
+	 * 		Current item of {@link #installCombo}.
+	 */
+	private void updateAllowNextIfJavaIsTooOld(@Nullable Object item) {
+		if (item instanceof JavaInstall) {
+			JavaInstall selectedInstall = (JavaInstall) item;
+			nextButton.setEnabled(selectedInstall.getVersion() >= JavaVersion.MIN_COMPATIBLE);
+		} else {
+			// Null means the current VM is being used.
+			nextButton.setEnabled(JavaVersion.get() >= JavaVersion.MIN_COMPATIBLE);
+		}
+	}
 
 	private void initComponents() {
 		// JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
