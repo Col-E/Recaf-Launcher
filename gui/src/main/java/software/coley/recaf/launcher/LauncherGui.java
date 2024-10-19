@@ -6,6 +6,7 @@ import ch.qos.logback.core.FileAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.coley.recaf.launcher.config.Config;
+import software.coley.recaf.launcher.gui.ErrorPanel;
 import software.coley.recaf.launcher.gui.FirstTimePanel;
 import software.coley.recaf.launcher.gui.MainPanel;
 import software.coley.recaf.launcher.info.JavaInstall;
@@ -19,12 +20,22 @@ import software.coley.recaf.launcher.util.Loggers;
 
 import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
 import java.awt.Container;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import java.awt.Window;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -217,19 +228,35 @@ public class LauncherGui {
 			JavaInstall javaInstall = config.getJavaInstall();
 			String javaExecutablePath = javaInstall == null ? null : javaInstall.getJavaExecutable().toString();
 			ExecutionTasks.RunResult result = ExecutionTasks.run(true, javaExecutablePath);
-			switch (result) {
-				case ERR_NOT_INSTALLED:
-					logger.error("Failed launching Recaf: Recaf is not installed");
+			if (!result.isSuccess()) logger.error("Failed launching Recaf: " + result.getCodeDescription());
+			switch (result.getCode()) {
+				case ExecutionTasks.ERR_NOT_INSTALLED:
 					if (uiContext)
 						JOptionPane.showMessageDialog(null, "Recaf is not installed", "Failed launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
 					break;
-				case ERR_NO_JFX:
-					logger.error("Failed launching Recaf: JavaFX is not installed");
+				case ExecutionTasks.ERR_NO_JFX:
 					if (uiContext)
 						JOptionPane.showMessageDialog(null, "JavaFX is not installed", "Failed launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
 					break;
-				case SUCCESS:
+				case ExecutionTasks.SUCCESS:
 					// no-op
+					break;
+				default:
+					if (uiContext) {
+						JScrollPane scroll = new JScrollPane(new ErrorPanel(result));
+						scroll.getVerticalScrollBar().setUnitIncrement(25);
+						scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+						scroll.addHierarchyListener(e -> {
+							Window window = SwingUtilities.getWindowAncestor(scroll);
+							if (window instanceof Dialog) {
+								Dialog dialog = (Dialog) window;
+								if (!dialog.isResizable()) {
+									dialog.setResizable(true);
+								}
+							}
+						});
+						JOptionPane.showMessageDialog(null, scroll, "Failed launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
+					}
 					break;
 			}
 		} catch (IOException ex) {

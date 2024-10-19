@@ -6,6 +6,7 @@
 *.gradle        text diff=java eol=lf
 
 # These files are text and should be normalized (Convert crlf => lf)
+*.jfd           text diff=json eol=lf
 *.css           text diff=css eol=lf
 *.html          text diff=html eol=lf
 *.md            text diff=markdown eol=lf
