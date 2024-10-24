@@ -82,7 +82,7 @@ public class ErrorPanel extends JPanel {
 
 	@Nonnull
 	private String export() {
-		return (outText.getText() + "\n" + errText.getText()).trim();
+		return (descriptionLabel.getText() + "\n\n" + outText.getText() + "\n" + errText.getText()).trim();
 	}
 
 	private void initComponents() {
