@@ -346,9 +346,14 @@ public class JavaFxTasks {
 		if (local == null)
 			force = true;
 		if (force || latest.isNewer(local)) {
-			updateTo(latest, force);
-			logger.info("Updated to JavaFX '{}'", latest.getVersion());
-			return latest;
+			try {
+				updateTo(latest, force);
+				logger.info("Updated to JavaFX '{}'", latest.getVersion());
+				return latest;
+			} catch (Throwable t) {
+				logger.error("Failed updating JavaFX to '{}'", latest.getVersion(), t);
+				return local;
+			}
 		}
 		logger.info("Current JavaFX is up-to-date: '{}'", local.getVersion());
 		return local;
@@ -395,7 +400,6 @@ public class JavaFxTasks {
 						actualSha1 = Hashing.sha1(Files.newInputStream(localPath));
 						if (actualSha1.equals(expectedSha1))
 							continue;
-
 					}
 
 					// Ensure parent directory exists before writing
