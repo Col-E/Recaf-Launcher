@@ -50,7 +50,7 @@ public class Config {
 					}
 					if (java != null) {
 						Path javaPath = Paths.get(java);
-						if (JavaEnvTasks.addJavaInstall(javaPath)) {
+						if (JavaEnvTasks.addJavaInstall(javaPath).wasSuccess()) {
 							JavaInstall configInstall = JavaEnvTasks.getByPath(javaPath);
 							if (configInstall != null)
 								javaInstall = configInstall;

@@ -101,7 +101,8 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 			}
 		}
 
-		if (JavaEnvTasks.addJavaInstall(selectedPath)) {
+		JavaEnvTasks.AdditionResult addResult = JavaEnvTasks.addJavaInstall(selectedPath);
+		if (addResult.wasSuccess()) {
 			// Validate the selected installation was a compatible version
 			JavaInstall install = JavaEnvTasks.getByPath(selectedPath);
 			if (install != null) {
@@ -125,7 +126,7 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 			// Refresh the combo-model list.
 			repopulateInstallModel(false);
 		} else {
-			JOptionPane.showMessageDialog(null, "The selected file was not a Java executable", "Incompatible selection", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
+			JOptionPane.showMessageDialog(null, addResult.message(), "Incompatible selection", JOptionPane.ERROR_MESSAGE, LauncherGui.recafIcon);
 			Toolkit.getDefaultToolkit().beep();
 		}
 	}

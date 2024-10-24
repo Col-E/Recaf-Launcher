@@ -39,6 +39,7 @@ public class ExecutionTasks {
 	public static final int ERR_FX_OLD_VERSION = 105;
 	public static final int ERR_FX_UNKNOWN_VERSION = 106;
 	public static final int ERR_CDI_INIT_FAILURE = 150;
+	public static final int ERR_NOT_A_JDK = 160;
 	public static final int INTELLIJ_TERMINATION = 130;
 
 	/**
@@ -168,6 +169,9 @@ public class ExecutionTasks {
 				case ERR_CDI_INIT_FAILURE:
 					logger.error("Recaf failed creating the CDI container, try re-downloading the Recaf jar & JavaFX dependencies");
 					break;
+				case ERR_NOT_A_JDK:
+					logger.error("Recaf requires a JDK but was run with a JRE");
+					break;
 				case 0:
 					// Expected after normal closure
 					break;
@@ -235,8 +239,10 @@ public class ExecutionTasks {
 					return "JavaFX on Recaf's classpath couldn't be identified";
 				case ERR_CDI_INIT_FAILURE:
 					return "Recaf failed to create its CDI container";
+				case ERR_NOT_A_JDK:
+					return "Recaf must be run with a JDK, but was run with a JRE";
 			}
-			return "";
+			return "<unknown error>";
 		}
 	}
 }

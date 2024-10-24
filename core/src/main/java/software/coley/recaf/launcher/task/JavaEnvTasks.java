@@ -154,28 +154,43 @@ public class JavaEnvTasks {
 	 * @return {@code true} when the path was recognized as a valid executable.
 	 * {@code false} when discarded.
 	 */
-	public static boolean addJavaInstall(@Nonnull Path javaExecutable) {
+	@Nonnull
+	public static AdditionResult addJavaInstall(@Nonnull Path javaExecutable) {
 		// Resolve sym-links
 		if (Files.isSymbolicLink(javaExecutable)) {
 			javaExecutable = SymLinks.resolveSymLink(javaExecutable);
 			if (javaExecutable == null)
-				return false;
+				return AdditionResult.ERR_RESOLVE_SYM_LINK;
 		}
 
-		// Validate path
+		// Validate executable is 'java' or 'javaw'
+		String execName = javaExecutable.getFileName().toString();
+		if (!execName.endsWith("java") && !javaExecutable.endsWith("java.exe")
+				&& !execName.endsWith("javaw") && !javaExecutable.endsWith("javaw.exe"))
+			return AdditionResult.ERR_NOT_JAVA_EXEC;
+
+		// Validate path structure
 		Path binDir = javaExecutable.getParent();
 		if (binDir == null)
-			return false;
+			return AdditionResult.ERR_PARENT;
 		Path jdkDir = binDir.getParent();
 		if (jdkDir == null)
-			return false;
+			return AdditionResult.ERR_PARENT;
+
+		// Validate it's a JDK and not a JRE
+		if (Files.notExists(binDir.resolve("javac")) && Files.notExists(binDir.resolve("javac.exe")))
+			return AdditionResult.ERR_JRE_NOT_JDK;
+
+		// Validate version
 		String jdkDirName = jdkDir.getFileName().toString();
 		int version = JavaVersion.fromVersionString(jdkDirName);
+		if (version == JavaVersion.UNKNOWN_VERSION)
+			return AdditionResult.ERR_UNRESOLVED_VERSION;
 		if (version > 8) {
 			addJavaInstall(new JavaInstall(javaExecutable, version));
-			return true;
+			return AdditionResult.SUCCESS;
 		}
-		return false;
+		return AdditionResult.ERR_TOO_OLD;
 	}
 
 	/**
@@ -193,5 +208,40 @@ public class JavaEnvTasks {
 
 	private static void addJavaInstall(@Nonnull JavaInstall install) {
 		javaInstalls.add(install);
+	}
+
+	public enum AdditionResult {
+		SUCCESS,
+		ERR_NOT_JAVA_EXEC,
+		ERR_RESOLVE_SYM_LINK,
+		ERR_PARENT,
+		ERR_JRE_NOT_JDK,
+		ERR_UNRESOLVED_VERSION,
+		ERR_TOO_OLD;
+
+		public boolean wasSuccess() {
+			return this == SUCCESS;
+		}
+
+		@Nonnull
+		public String message() {
+			switch (this) {
+				case SUCCESS:
+					return "";
+				case ERR_RESOLVE_SYM_LINK:
+					return "The selected symbolic-link could not be resolved";
+				case ERR_NOT_JAVA_EXEC:
+					return "The selected file was not 'java' or 'javaw'";
+				case ERR_UNRESOLVED_VERSION:
+					return "The selected java executable could not have its version resolved";
+				case ERR_PARENT:
+					return "The selected java executable could not have its parent directories";
+				case ERR_JRE_NOT_JDK:
+					return "The selected java executable belongs to a JRE and not a JDK";
+				case ERR_TOO_OLD:
+					return "The selected java executable is from a outdated/unsupported version of Java";
+			}
+			return "The selected executable was not valid: " + name();
+		}
 	}
 }
