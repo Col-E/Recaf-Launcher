@@ -1,7 +1,11 @@
 package software.coley.recaf.launcher.util;
 
 import javax.annotation.Nonnull;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -24,7 +28,7 @@ public class Web {
 	 */
 	@Nonnull
 	public static String getText(@Nonnull String url) throws IOException {
-		return get(url, Web::toString);
+		return mapContent(url, Web::toString);
 	}
 
 	/**
@@ -38,11 +42,35 @@ public class Web {
 	 */
 	@Nonnull
 	public static byte[] getBytes(@Nonnull String url) throws IOException {
-		return get(url, Web::toBytes);
+		return mapContent(url, Web::toBytes);
+	}
+
+	/**
+	 * @param url
+	 * 		URL to read from.
+	 * @param consumer
+	 * 		Consumer to operate on the content at the given URL.
+	 *
+	 * @throws IOException
+	 * 		When the content cannot be read.
+	 */
+	public static void consumeStream(@Nonnull String url, @Nonnull IOConsumer<InputStream> consumer) throws IOException {
+		acceptContent(url, consumer);
 	}
 
 	@Nonnull
-	private static <T> T get(@Nonnull String url, @Nonnull IOFunction<InputStream, T> function) throws IOException {
+	private static <T> T mapContent(@Nonnull String url, @Nonnull IOFunction<InputStream, T> function) throws IOException {
+		URLConnection conn = openConnection(url);
+		return function.apply(conn.getInputStream());
+	}
+
+	private static void acceptContent(@Nonnull String url, @Nonnull IOConsumer<InputStream> consumer) throws IOException {
+		URLConnection conn = openConnection(url);
+		consumer.accept(conn.getInputStream());
+	}
+
+	@Nonnull
+	private static URLConnection openConnection(@Nonnull String url) throws IOException {
 		URL urlObject = new URL(url);
 		URLConnection conn = urlObject.openConnection();
 		conn.setRequestProperty("User-Agent", USER_AGENT);
@@ -52,7 +80,7 @@ public class Web {
 			httpURLConnection.setRequestMethod("GET");
 			httpURLConnection.setInstanceFollowRedirects(true);
 		}
-		return function.apply(conn.getInputStream());
+		return conn;
 	}
 
 	@Nonnull

@@ -6,8 +6,14 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import org.json.XML;
 import org.slf4j.Logger;
-import software.coley.recaf.launcher.info.*;
+import software.coley.recaf.launcher.info.ArchitectureType;
+import software.coley.recaf.launcher.info.JavaFxPlatform;
+import software.coley.recaf.launcher.info.JavaFxVersion;
+import software.coley.recaf.launcher.info.JavaVersion;
+import software.coley.recaf.launcher.info.PlatformType;
+import software.coley.recaf.launcher.info.SystemInformation;
 import software.coley.recaf.launcher.util.CommonPaths;
+import software.coley.recaf.launcher.util.Hashing;
 import software.coley.recaf.launcher.util.Loggers;
 import software.coley.recaf.launcher.util.Reflection;
 import software.coley.recaf.launcher.util.Web;
@@ -18,9 +24,17 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.Comparator;
+import java.util.NavigableMap;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -365,18 +379,41 @@ public class JavaFxTasks {
 		String[] artifacts = {"javafx-base", "javafx-graphics", "javafx-controls", "javafx-media"};
 		for (String artifact : artifacts) {
 			String artifactFormat = "%s-%s-%s.jar";
-			String artifactUrlFormat = " https://repo1.maven.org/maven2/org/openjfx/%s/%s/" + artifactFormat;
+			String artifactUrlFormat = "https://repo1.maven.org/maven2/org/openjfx/%s/%s/" + artifactFormat;
 			String localArtifact = String.format(artifactFormat, artifact, versionName, classifier);
 			String artifactUrl = String.format(artifactUrlFormat, artifact, versionName, artifact, versionName, classifier);
+			String artifactUrlSha1 = artifactUrl + ".sha1";
 			Path dependenciesDir = CommonPaths.getDependenciesDir();
 			Path localPath = dependenciesDir.resolve(localArtifact);
-			if (force || !Files.exists(localPath)) {
+			boolean localPathExists = Files.exists(localPath);
+			if (force || !localPathExists) {
 				try {
+					String expectedSha1 = Web.getText(artifactUrlSha1).trim();
+					String actualSha1;
+					if (localPathExists) {
+						// Skip if the local file hash exactly matches the expected hash reported by maven central
+						actualSha1 = Hashing.sha1(Files.newInputStream(localPath));
+						if (actualSha1.equals(expectedSha1))
+							continue;
+
+					}
+
+					// Ensure parent directory exists before writing
 					if (!Files.isDirectory(dependenciesDir)) Files.createDirectories(dependenciesDir);
 
-					// TODO: Validating these would be nice
-					byte[] download = Web.getBytes(artifactUrl);
-					Files.copy(new ByteArrayInputStream(download), localPath, StandardCopyOption.REPLACE_EXISTING);
+					int tries = 5;
+					while (tries-- > 0) {
+						// Download the file to the local path
+						Web.consumeStream(artifactUrl, stream -> Files.copy(stream, localPath, StandardCopyOption.REPLACE_EXISTING));
+
+						// Validate the file hash matches, try again if it does not match
+						actualSha1 = Hashing.sha1(Files.newInputStream(localPath));
+						if (actualSha1.equals(expectedSha1))
+							break;
+						else
+							logger.error("Downloaded FX artifact '{}' but the SHA1 hash did not match " +
+									"(expected={} vs local={}), retries remaining={}", artifact, tries, expectedSha1, actualSha1);
+					}
 				} catch (IOException ex) {
 					logger.error("Failed downloading FX artifact: '{}'", artifactUrl, ex);
 				}

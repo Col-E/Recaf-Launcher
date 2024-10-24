@@ -14,6 +14,16 @@ public class Stream {
 	/**
 	 * @param bufferSize
 	 * 		Buffer size.
+	 *
+	 * @return Array buffer of the given size, capped to {@link #MAX_BUFFER_SIZE}.
+	 */
+	private static byte[] newBuffer(int bufferSize) {
+		return new byte[Math.max(bufferSize, MAX_BUFFER_SIZE)];
+	}
+
+	/**
+	 * @param bufferSize
+	 * 		Buffer size.
 	 * @param input
 	 * 		Stream to copy from.
 	 * @param output
@@ -24,9 +34,8 @@ public class Stream {
 	 */
 	public static void transfer(int bufferSize, @Nonnull InputStream input, @Nonnull OutputStream output) throws IOException {
 		int read;
-		byte[] data = new byte[Math.max(bufferSize, MAX_BUFFER_SIZE)];
-		while ((read = input.read(data, 0, data.length)) != -1) {
+		byte[] data = newBuffer(bufferSize);
+		while ((read = input.read(data)) != -1)
 			output.write(data, 0, read);
-		}
 	}
 }
