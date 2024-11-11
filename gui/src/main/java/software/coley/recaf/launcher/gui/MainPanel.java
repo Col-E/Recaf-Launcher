@@ -14,11 +14,25 @@ import software.coley.recaf.launcher.task.error.InvalidInstallationException;
 import software.coley.recaf.launcher.util.CommonPaths;
 
 import javax.annotation.Nonnull;
-import javax.swing.*;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -31,6 +45,10 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	private final LauncherFeedback feedback = new LauncherFeedback() {
 		@Override
 		public void updateLaunchProgressMessage(@Nonnull String message) {
+			// TODO: Refactor launcherFeedback to be more encompassing
+			//  - Cant use this to show progress of updating Recaf
+			//  - recafVersionProgress.setStringPainted(true);
+			//  - recafVersionProgress.setString(message);
 			feedbackLabel.setText(message);
 		}
 
@@ -56,6 +74,9 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 		this.frame = frame;
 
 		initComponents();
+
+		// Initially show the recaf version label
+		recafVersionWrapper.add(recafVersionLabel, BorderLayout.CENTER);
 
 		// Setup install selection & style
 		setupInstallCombo();
@@ -165,9 +186,23 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	 */
 	private void updateRecaf() {
 		CompletableFuture.runAsync(() -> {
+			// Swap out version label for progress bar
+			recafVersionProgress.setIndeterminate(true);
+			recafVersionWrapper.removeAll();
+			recafVersionWrapper.add(recafVersionProgress, BorderLayout.CENTER);
+			recafVersionWrapper.revalidate();
+
+			// Disable button and update the label
 			updateRecafButton.setEnabled(false);
 			recafVersionLabel.setText("<html><i>Updating...</i></html>");
+
 			LauncherGui.updateRecaf();
+
+			// Put the label back in its original place and re-enable the button
+			recafVersionProgress.setIndeterminate(false);
+			recafVersionWrapper.removeAll();
+			recafVersionWrapper.add(BorderLayout.CENTER, recafVersionLabel);
+			recafVersionWrapper.revalidate();
 			updateRecafButton.setEnabled(true);
 		});
 	}
@@ -221,7 +256,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
         DefaultComponentFactory compFactory = DefaultComponentFactory.getInstance();
         versionsCard = new JPanel();
         JLabel recafVersionPrefix = new JLabel();
-        recafVersionLabel = new JLabel();
+        recafVersionWrapper = new JPanel();
         updateRecafButton = new JButton();
         JLabel javafxVersionPrefix = new JLabel();
         javafxVersionLabel = new JLabel();
@@ -235,6 +270,8 @@ public class MainPanel extends BrowsableJavaVersionPanel {
         feedbackCard = new JPanel();
         feedbackLabel = new JLabel();
         feedbackProgressBar = new JProgressBar();
+        recafVersionLabel = new JLabel();
+        recafVersionProgress = new JProgressBar();
 
         //======== this ========
         setBorder(new EmptyBorder(8, 8, 8, 8));
@@ -249,7 +286,12 @@ public class MainPanel extends BrowsableJavaVersionPanel {
             //---- recafVersionPrefix ----
             recafVersionPrefix.setText("Recaf Version:");
             versionsCard.add(recafVersionPrefix, CC.xy(1, 1));
-            versionsCard.add(recafVersionLabel, CC.xy(3, 1));
+
+            //======== recafVersionWrapper ========
+            {
+                recafVersionWrapper.setLayout(new BorderLayout());
+            }
+            versionsCard.add(recafVersionWrapper, CC.xy(3, 1));
 
             //---- updateRecafButton ----
             updateRecafButton.setText("Update");
@@ -309,13 +351,16 @@ public class MainPanel extends BrowsableJavaVersionPanel {
             feedbackProgressBar.setValue(-1);
             feedbackCard.add(feedbackProgressBar, CC.xy(1, 5));
         }
+
+        //---- recafVersionProgress ----
+        recafVersionProgress.setIndeterminate(true);
         // JFormDesigner - End of component initialization  //GEN-END:initComponents  @formatter:on
 	}
 
 	// JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     // Generated using JFormDesigner non-commercial license
     private JPanel versionsCard;
-    private JLabel recafVersionLabel;
+    private JPanel recafVersionWrapper;
     private JButton updateRecafButton;
     private JLabel javafxVersionLabel;
     private JButton updateJavafxButton;
@@ -326,5 +371,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
     private JPanel feedbackCard;
     private JLabel feedbackLabel;
     private JProgressBar feedbackProgressBar;
+    private JLabel recafVersionLabel;
+    private JProgressBar recafVersionProgress;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }

@@ -25,8 +25,8 @@ new FormModel {
 				"gridX": 1
 				"gridY": 1
 			} )
-			add( new FormComponent( "javax.swing.JLabel" ) {
-				name: "recafVersionLabel"
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+				name: "recafVersionWrapper"
 			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
 				"gridX": 3
 				"gridY": 1
@@ -148,6 +148,18 @@ new FormModel {
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 275 )
 			"size": new java.awt.Dimension( 320, 190 )
+		} )
+		add( new FormComponent( "javax.swing.JLabel" ) {
+			name: "recafVersionLabel"
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 340, 60 )
+			"size": new java.awt.Dimension( 138, 31 )
+		} )
+		add( new FormComponent( "javax.swing.JProgressBar" ) {
+			name: "recafVersionProgress"
+			"indeterminate": true
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 545, 70 )
 		} )
 	}
 }
