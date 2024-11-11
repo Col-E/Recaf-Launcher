@@ -75,8 +75,9 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 
 		initComponents();
 
-		// Initially show the recaf version label
+		// Initially show the version labels
 		recafVersionWrapper.add(recafVersionLabel, BorderLayout.CENTER);
+		javafxVersionWrapper.add(javafxVersionLabel, BorderLayout.CENTER);
 
 		// Setup install selection & style
 		setupInstallCombo();
@@ -214,9 +215,23 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	 */
 	private void updateJavafx() {
 		CompletableFuture.runAsync(() -> {
+			// Swap out version label for progress bar
+			javafxVersionProgress.setIndeterminate(true);
+			javafxVersionWrapper.removeAll();
+			javafxVersionWrapper.add(javafxVersionProgress, BorderLayout.CENTER);
+			javafxVersionWrapper.revalidate();
+
+			// Disable button and update the label
 			updateJavafxButton.setEnabled(false);
 			javafxVersionLabel.setText("<html><i>Updating...</i></html>");
+
 			LauncherGui.updateJavafx();
+
+			// Put the label back in its original place and re-enable the button
+			javafxVersionProgress.setIndeterminate(false);
+			javafxVersionWrapper.removeAll();
+			javafxVersionWrapper.add(BorderLayout.CENTER, javafxVersionLabel);
+			javafxVersionWrapper.revalidate();
 			updateJavafxButton.setEnabled(true);
 		});
 	}
@@ -259,7 +274,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
         recafVersionWrapper = new JPanel();
         updateRecafButton = new JButton();
         JLabel javafxVersionPrefix = new JLabel();
-        javafxVersionLabel = new JLabel();
+        javafxVersionWrapper = new JPanel();
         updateJavafxButton = new JButton();
         JLabel installLabel = new JLabel();
         installCombo = new JComboBox<>();
@@ -272,6 +287,8 @@ public class MainPanel extends BrowsableJavaVersionPanel {
         feedbackProgressBar = new JProgressBar();
         recafVersionLabel = new JLabel();
         recafVersionProgress = new JProgressBar();
+        javafxVersionLabel = new JLabel();
+        javafxVersionProgress = new JProgressBar();
 
         //======== this ========
         setBorder(new EmptyBorder(8, 8, 8, 8));
@@ -302,7 +319,12 @@ public class MainPanel extends BrowsableJavaVersionPanel {
             //---- javafxVersionPrefix ----
             javafxVersionPrefix.setText("JavaFX Version:");
             versionsCard.add(javafxVersionPrefix, CC.xy(1, 3));
-            versionsCard.add(javafxVersionLabel, CC.xy(3, 3));
+
+            //======== javafxVersionWrapper ========
+            {
+                javafxVersionWrapper.setLayout(new BorderLayout());
+            }
+            versionsCard.add(javafxVersionWrapper, CC.xy(3, 3));
 
             //---- updateJavafxButton ----
             updateJavafxButton.setText("Update");
@@ -354,6 +376,9 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 
         //---- recafVersionProgress ----
         recafVersionProgress.setIndeterminate(true);
+
+        //---- javafxVersionProgress ----
+        javafxVersionProgress.setIndeterminate(true);
         // JFormDesigner - End of component initialization  //GEN-END:initComponents  @formatter:on
 	}
 
@@ -362,7 +387,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
     private JPanel versionsCard;
     private JPanel recafVersionWrapper;
     private JButton updateRecafButton;
-    private JLabel javafxVersionLabel;
+    private JPanel javafxVersionWrapper;
     private JButton updateJavafxButton;
     private JComboBox<JavaInstall> installCombo;
     private JButton browseInstallButton;
@@ -373,5 +398,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
     private JProgressBar feedbackProgressBar;
     private JLabel recafVersionLabel;
     private JProgressBar recafVersionProgress;
+    private JLabel javafxVersionLabel;
+    private JProgressBar javafxVersionProgress;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }

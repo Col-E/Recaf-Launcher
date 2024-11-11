@@ -50,8 +50,8 @@ new FormModel {
 				"gridX": 1
 				"gridY": 3
 			} )
-			add( new FormComponent( "javax.swing.JLabel" ) {
-				name: "javafxVersionLabel"
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+				name: "javafxVersionWrapper"
 			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
 				"gridX": 3
 				"gridY": 3
@@ -160,6 +160,19 @@ new FormModel {
 			"indeterminate": true
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 545, 70 )
+		} )
+		add( new FormComponent( "javax.swing.JLabel" ) {
+			name: "javafxVersionLabel"
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 340, 95 )
+			"size": new java.awt.Dimension( 138, 31 )
+		} )
+		add( new FormComponent( "javax.swing.JProgressBar" ) {
+			name: "javafxVersionProgress"
+			"indeterminate": true
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 545, 105 )
+			"size": new java.awt.Dimension( 146, 4 )
 		} )
 	}
 }
