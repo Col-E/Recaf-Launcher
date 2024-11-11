@@ -9,6 +9,7 @@ import software.coley.recaf.launcher.config.Config;
 import software.coley.recaf.launcher.gui.ErrorPanel;
 import software.coley.recaf.launcher.gui.FirstTimePanel;
 import software.coley.recaf.launcher.gui.MainPanel;
+import software.coley.recaf.launcher.gui.PopupLauncherFeedback;
 import software.coley.recaf.launcher.info.JavaInstall;
 import software.coley.recaf.launcher.task.ExecutionTasks;
 import software.coley.recaf.launcher.task.JavaFxTasks;
@@ -34,8 +35,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Window;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -86,7 +85,7 @@ public class LauncherGui {
 				launch(LauncherFeedback.NOOP, false);
 				break;
 			case UPDATE_RUN_RECAF:
-				launch(LauncherFeedback.NOOP, true);
+				launch(new PopupLauncherFeedback(null), true);
 				break;
 		}
 	}
@@ -142,26 +141,7 @@ public class LauncherGui {
 	 * Shows the main launcher GUI.
 	 */
 	private static void showLauncher() {
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-			// Scale up the global font size.
-			GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			List<String> fonts = Arrays.asList(env.getAvailableFontFamilyNames());
-			int fontSize = 13;
-			if (fonts.contains("Segoe UI"))
-				setUIFont(new FontUIResource("Segoe UI", Font.PLAIN, fontSize));
-			else if (fonts.contains("Helvetica"))
-				setUIFont(new FontUIResource("Helvetica", Font.PLAIN, fontSize));
-			else if (fonts.contains("Trebuchet MS"))
-				setUIFont(new FontUIResource("Trebuchet MS", Font.PLAIN, fontSize));
-			else if (fonts.contains("Tahoma"))
-				setUIFont(new FontUIResource("Tahoma", Font.PLAIN, fontSize));
-			else
-				setUIFont(new FontUIResource("Arial", Font.PLAIN, fontSize));
-		} catch (Throwable t) {
-			logger.error("Failed to set launcher LAF");
-		}
+		setupLookAndFeel();
 
 		JFrame frame = new JFrame();
 		frame.setTitle("Recaf Launcher");
@@ -206,6 +186,32 @@ public class LauncherGui {
 	}
 
 	/**
+	 * Assign look-and-feel plus font sizes.
+	 */
+	public static void setupLookAndFeel() {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+			// Scale up the global font size.
+			GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			List<String> fonts = Arrays.asList(env.getAvailableFontFamilyNames());
+			int fontSize = 13;
+			if (fonts.contains("Segoe UI"))
+				setUIFont(new FontUIResource("Segoe UI", Font.PLAIN, fontSize));
+			else if (fonts.contains("Helvetica"))
+				setUIFont(new FontUIResource("Helvetica", Font.PLAIN, fontSize));
+			else if (fonts.contains("Trebuchet MS"))
+				setUIFont(new FontUIResource("Trebuchet MS", Font.PLAIN, fontSize));
+			else if (fonts.contains("Tahoma"))
+				setUIFont(new FontUIResource("Tahoma", Font.PLAIN, fontSize));
+			else
+				setUIFont(new FontUIResource("Arial", Font.PLAIN, fontSize));
+		} catch (Throwable t) {
+			logger.error("Failed to set launcher LAF", t);
+		}
+	}
+
+	/**
 	 * Handles launching Recaf.
 	 *
 	 * @param update
@@ -222,6 +228,7 @@ public class LauncherGui {
 			feedback.updateLaunchProgressMessage("Updating JavaFX...");
 			updateJavafx();
 		}
+		feedback.updateLaunchProgressMessage("Launching Recaf...");
 		feedback.finishLaunchProgress();
 
 		try {
