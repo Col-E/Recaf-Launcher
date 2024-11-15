@@ -67,42 +67,85 @@ public class ExecutionTasks {
 		}
 
 		JavaFxPlatform javaFxPlatform = JavaFxTasks.detectSystemPlatform();
-		JavaFxVersion javaFxVersion;
-		int javaFxRuntimeVersion = JavaFxTasks.detectClasspathVersion();
-		if (javaExecutablePath != null && javaFxRuntimeVersion > 0) {
-			// Only use runtime version if we're using the current runtime's executable to launch the process.
-			javaFxVersion = new JavaFxVersion(javaFxRuntimeVersion);
-		} else {
-			javaFxVersion = JavaFxTasks.detectCachedVersion();
+		JavaFxVersion javaFxVersion = null;
+
+		// Only use runtime version if we're using the current runtime's executable to launch the process.
+		boolean useRuntimeFx = false;
+		if (javaExecutablePath == null) {
+			int javaFxRuntimeVersion = JavaFxTasks.detectClasspathVersion();
+			if (javaFxRuntimeVersion >= JavaFxVersion.MIN_SUGGESTED) {
+				useRuntimeFx = true;
+				javaFxVersion = new JavaFxVersion(javaFxRuntimeVersion);
+				logger.info("Using current runtime version of JavaFX: {}", javaFxRuntimeVersion);
+			} else {
+				logger.error("The current runtime bundles JavaFX that is too old ({}).\n" +
+						"- Try running with a JDK that has an up-to-date JavaFX bundled\n" +
+						"- Or use a JDK that does not bundle JavaFX and let the launcher grab it for you", javaFxVersion);
+				return new RunResult(ERR_FX_OLD_VERSION);
+			}
 		}
 
-		// Ensure a version was chosen.
+		// If we're not using the runtime version, pull the version from our dependency download cache.
 		if (javaFxVersion == null) {
-			logger.error("No local cached version of JavaFX found.\n" +
-					"- Try running with 'update-jfx'\n" +
-					"- Or use a JDK that bundles JavaFX");
-			return new RunResult(ERR_NO_JFX);
-		}
+			javaFxVersion = JavaFxTasks.detectCachedVersion();
 
+			// Ensure a version was found
+			if (javaFxVersion == null) {
+				logger.error("No local cached version of JavaFX found.\n" +
+						"- Try running with 'update-jfx'\n" +
+						"- Or use a JDK that bundles JavaFX");
+				return new RunResult(ERR_NO_JFX);
+			}
+
+			// Ensure a valid version was found
+			if (javaFxVersion.getMajorVersion() < JavaFxVersion.MIN_SUGGESTED) {
+				logger.error("The cached version of JavaFX was too old ({}).\n" +
+						"- Try running with 'update-jfx'\n" +
+						"- Or use a JDK that bundles JavaFX", javaFxVersion);
+				return new RunResult(ERR_FX_OLD_VERSION);
+			}
+
+			logger.info("Using cached version of JavaFX: {}", javaFxVersion);
+		}
 
 		// Build classpath:
 		//  - Recaf jar
 		//  - JavaFX jars
 		List<Path> classpathItems = new ArrayList<>();
 		classpathItems.add(recafDirectory.relativize(CommonPaths.getRecafJar()));
-		if (javaFxRuntimeVersion < 0) {
+		if (!useRuntimeFx) {
 			// If the current runtime has JavaFX we don't need to include the dependencies' dir.
 			// The runtime should provide JavaFX's classes and native libraries.
 			Path dependenciesDir = CommonPaths.getDependenciesDir();
 			if (!Files.isDirectory(dependenciesDir))
 				return new RunResult(ERR_NO_JFX);
+			String versionIdentifier = javaFxVersion.getVersion() + "-" + javaFxPlatform.getClassifier();
 			List<Path> javafxDependencies = Files.list(dependenciesDir)
 					.filter(path -> {
 						String fileName = path.getFileName().toString();
-						return fileName.contains(javaFxVersion.getVersion() + "-" + javaFxPlatform.getClassifier());
+						return fileName.contains(versionIdentifier);
 					})
 					.map(recafDirectory::relativize)
 					.collect(Collectors.toList());
+
+			// Validate we found:
+			// - base
+			// - graphics
+			// - controls
+			List<String> expected = new ArrayList<>();
+			expected.add("javafx-base");
+			expected.add("javafx-graphics");
+			expected.add("javafx-controls");
+			for (Path fxDependency : javafxDependencies) {
+				String name = fxDependency.getFileName().toString();
+				expected.removeIf(name::contains);
+			}
+			if (!expected.isEmpty()) {
+				logger.error("Missing the following JavaFX artifacts: " + String.join(", ", expected));
+				return new RunResult(ERR_NO_JFX);
+			}
+
+			// Add to -cp
 			classpathItems.addAll(javafxDependencies);
 		}
 
