@@ -67,6 +67,14 @@ public class CommonPaths {
 	}
 
 	/**
+	 * @return Path to Recaf temporary jar used in the update process.
+	 */
+	@Nonnull
+	public static Path getRecafTempJar() {
+		return getRecafDirectory().resolve("recaf-update-tmp");
+	}
+
+	/**
 	 * @return Path to cli launcher config.
 	 */
 	@Nonnull

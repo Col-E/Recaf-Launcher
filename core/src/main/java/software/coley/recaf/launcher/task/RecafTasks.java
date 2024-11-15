@@ -146,10 +146,17 @@ public class RecafTasks {
 			// Get the first asset that indicates a fat-jar
 			if (name.endsWith("-all.jar") || name.endsWith("-jar-with-dependencies.jar")) {
 				Path recafJar = CommonPaths.getRecafJar();
+				Path recafJarTemp = CommonPaths.getRecafTempJar();
 				String downloadUrl = asset.getString("browser_download_url", null);
 				try {
 					byte[] download = Web.getBytes(downloadUrl);
 					Files.copy(new ByteArrayInputStream(download), recafJar, StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(new ByteArrayInputStream(download), recafJarTemp, StandardCopyOption.REPLACE_EXISTING);
+					try {
+						Files.move(recafJarTemp, recafJar, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+					} catch (Exception ignored) {
+						Files.move(recafJarTemp, recafJar, StandardCopyOption.REPLACE_EXISTING);
+					}
 					return new VersionUpdateResult(installedVersion, latestVersion, VersionUpdateStatusType.UPDATE_TO_NEW);
 				} catch (IOException ex) {
 					return new VersionUpdateResult(installedVersion, latestVersion, VersionUpdateStatusType.FAILED_TO_WRITE)
@@ -263,8 +270,14 @@ public class RecafTasks {
 					while (true) {
 						ZipEntry entry = zip.getNextEntry();
 						if (entry == null) break;
-						if (entry.getName().toLowerCase().contains(".jar"))
-							Files.copy(zip, CommonPaths.getRecafJar(), StandardCopyOption.REPLACE_EXISTING);
+						if (entry.getName().toLowerCase().contains(".jar")) {
+							Files.copy(zip, CommonPaths.getRecafTempJar(), StandardCopyOption.REPLACE_EXISTING);
+							try {
+								Files.move(CommonPaths.getRecafTempJar(), CommonPaths.getRecafJar(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+							} catch (Exception ignored) {
+								Files.move(CommonPaths.getRecafTempJar(), CommonPaths.getRecafJar(), StandardCopyOption.REPLACE_EXISTING);
+							}
+						}
 					}
 				} catch (IOException ex) {
 					return new VersionUpdateResult(installedVersion, SNAPSHOT_VERSION, VersionUpdateStatusType.FAILED_TO_WRITE)
