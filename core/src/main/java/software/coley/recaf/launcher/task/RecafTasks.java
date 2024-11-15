@@ -12,6 +12,7 @@ import software.coley.recaf.launcher.info.RecafVersion;
 import software.coley.recaf.launcher.task.error.InvalidInstallationException;
 import software.coley.recaf.launcher.util.CommonPaths;
 import software.coley.recaf.launcher.util.Stream;
+import software.coley.recaf.launcher.util.TransferListener;
 import software.coley.recaf.launcher.util.Web;
 
 import javax.annotation.Nonnull;
@@ -38,6 +39,16 @@ public class RecafTasks {
 	private static final String LATEST_RELEASE = "https://api.github.com/repos/Col-E/Recaf/releases/latest";
 	private static final int RECAF_REPO_ID = 98499283; // See: https://api.github.com/repos/Col-E/Recaf
 	private static final RecafVersion SNAPSHOT_VERSION = new RecafVersion("4.X.X-SNAPSHOT", 0);
+	public static final int FALLBACK_RECAF_SIZE_BYTES = 80_000_000; // Rough over-estimated size of recaf jar in bytes (80 MB)
+	private static TransferListener downloadListener;
+
+	/**
+	 * @param downloadListener
+	 * 		Listener to be notified of Recaf download operations.
+	 */
+	public static void setDownloadListener(@Nullable TransferListener downloadListener) {
+		RecafTasks.downloadListener = downloadListener;
+	}
 
 	/**
 	 * Get the current installed version of Recaf.
@@ -149,8 +160,7 @@ public class RecafTasks {
 				Path recafJarTemp = CommonPaths.getRecafTempJar();
 				String downloadUrl = asset.getString("browser_download_url", null);
 				try {
-					byte[] download = Web.getBytes(downloadUrl);
-					Files.copy(new ByteArrayInputStream(download), recafJar, StandardCopyOption.REPLACE_EXISTING);
+					byte[] download = Web.getBytes(downloadUrl, downloadListener);
 					Files.copy(new ByteArrayInputStream(download), recafJarTemp, StandardCopyOption.REPLACE_EXISTING);
 					try {
 						Files.move(recafJarTemp, recafJar, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
@@ -264,7 +274,7 @@ public class RecafTasks {
 				// https://nightly.link/Col-E/Recaf/actions/runs/<run-id>/snapshot-build.zip
 				//  - Feeling generous? You can sponsor the nightly link mirror service: https://github.com/sponsors/oprypin
 				String downloadUrl = "https://nightly.link/Col-E/Recaf/actions/runs/" + workflowRunId + "/snapshot-build.zip";
-				byte[] download = Web.getBytes(downloadUrl);
+				byte[] download = Web.getBytes(downloadUrl, downloadListener);
 				try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(download))) {
 					// Extract the jar from the zip
 					while (true) {

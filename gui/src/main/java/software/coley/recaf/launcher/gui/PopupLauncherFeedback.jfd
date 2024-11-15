@@ -22,6 +22,7 @@ new FormModel {
 				name: "feedbackBar"
 				"value": -1
 				"indeterminate": true
+				"stringPainted": true
 			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
 				"gridX": 2
 				"gridY": 5

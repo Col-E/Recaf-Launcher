@@ -214,6 +214,8 @@ public class LauncherGui {
 	/**
 	 * Handles launching Recaf.
 	 *
+	 * @param feedback
+	 * 		Feedback mechanism for launch progress.
 	 * @param update
 	 *        {@code true} when the user indicated they have opted to update Recaf.
 	 */
@@ -221,7 +223,7 @@ public class LauncherGui {
 		// Handle updating, even in cases where the user did not opt to update but one is required.
 		if (update || recafRequiresUpdate()) {
 			feedback.updateLaunchProgressMessage("Updating Recaf...");
-			updateRecaf();
+			updateRecaf(feedback);
 		}
 		if (javafxRequiresUpdate()) // Only update JavaFX when needed.
 		{
@@ -283,8 +285,12 @@ public class LauncherGui {
 
 	/**
 	 * Downloads the latest Recaf jar.
+	 *
+	 * @param feedback
+	 * 		Feedback mechanism for update progress.
 	 */
-	public static void updateRecaf() {
+	public static void updateRecaf(@Nonnull LauncherFeedback feedback) {
+		RecafTasks.setDownloadListener(feedback.provideRecafDownloadListener());
 		VersionUpdateResult result = RecafTasks.updateFromSnapshot("master");
 
 		// Ensure the update passed
@@ -298,6 +304,8 @@ public class LauncherGui {
 				String message = "Recaf could not be downloaded to:\n" + recafPath + "\n\nError details:\n" + sw;
 				JOptionPane.showMessageDialog(null, message, "Failed updating Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
 			}
+		} else if (Objects.equals(result.getFrom(), result.getTo())) {
+			logger.info("No updates for Recaf available, we are up-to-date.");
 		}
 	}
 

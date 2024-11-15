@@ -12,6 +12,8 @@ import software.coley.recaf.launcher.task.JavaFxTasks;
 import software.coley.recaf.launcher.task.RecafTasks;
 import software.coley.recaf.launcher.task.error.InvalidInstallationException;
 import software.coley.recaf.launcher.util.CommonPaths;
+import software.coley.recaf.launcher.util.StringUtil;
+import software.coley.recaf.launcher.util.TransferListener;
 
 import javax.annotation.Nonnull;
 import javax.swing.BoxLayout;
@@ -43,12 +45,16 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	private static final String CARD_FEEDBACK = "feedback";
 	private final JFrame frame;
 	private final LauncherFeedback feedback = new LauncherFeedback() {
+		@Nonnull
+		@Override
+		public TransferListener provideRecafDownloadListener() {
+			// TODO: Need to do something like this for JavaFX
+			//  - But that is 4 downloads and not just 1
+			return new ProgressBarTransferListener(RecafTasks.FALLBACK_RECAF_SIZE_BYTES, recafVersionProgress);
+		}
+
 		@Override
 		public void updateLaunchProgressMessage(@Nonnull String message) {
-			// TODO: Refactor launcherFeedback to be more encompassing
-			//  - Cant use this to show progress of updating Recaf
-			//  - recafVersionProgress.setStringPainted(true);
-			//  - recafVersionProgress.setString(message);
 			feedbackLabel.setText(message);
 		}
 
@@ -197,7 +203,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 			updateRecafButton.setEnabled(false);
 			recafVersionLabel.setText("<html><i>Updating...</i></html>");
 
-			LauncherGui.updateRecaf();
+			LauncherGui.updateRecaf(feedback);
 
 			// Put the label back in its original place and re-enable the button
 			recafVersionProgress.setIndeterminate(false);
@@ -205,6 +211,9 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 			recafVersionWrapper.add(BorderLayout.CENTER, recafVersionLabel);
 			recafVersionWrapper.revalidate();
 			updateRecafButton.setEnabled(true);
+
+			// Ensure the label is updated in case no actual updated were determined to have been necessary
+			updateRecafLabel();
 		});
 	}
 
@@ -376,6 +385,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 
         //---- recafVersionProgress ----
         recafVersionProgress.setIndeterminate(true);
+        recafVersionProgress.setStringPainted(true);
 
         //---- javafxVersionProgress ----
         javafxVersionProgress.setIndeterminate(true);

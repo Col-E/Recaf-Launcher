@@ -1,6 +1,7 @@
 package software.coley.recaf.launcher.util;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class Web {
 	 */
 	@Nonnull
 	public static String getText(@Nonnull String url) throws IOException {
-		return mapContent(url, Web::toString);
+		return mapContent(url, (connection, stream) -> toString(stream));
 	}
 
 	/**
@@ -41,8 +42,11 @@ public class Web {
 	 * 		When the content cannot be read.
 	 */
 	@Nonnull
-	public static byte[] getBytes(@Nonnull String url) throws IOException {
-		return mapContent(url, Web::toBytes);
+	public static byte[] getBytes(@Nonnull String url, @Nullable TransferListener listener) throws IOException {
+		return mapContent(url, (connection, stream) -> {
+			int max = connection.getContentLength();
+			return Web.toBytes(stream, max, listener);
+		});
 	}
 
 	/**
@@ -55,18 +59,18 @@ public class Web {
 	 * 		When the content cannot be read.
 	 */
 	public static void consumeStream(@Nonnull String url, @Nonnull IOConsumer<InputStream> consumer) throws IOException {
-		acceptContent(url, consumer);
+		acceptContent(url, (connection, stream) -> consumer.accept(stream));
 	}
 
 	@Nonnull
-	private static <T> T mapContent(@Nonnull String url, @Nonnull IOFunction<InputStream, T> function) throws IOException {
+	private static <T> T mapContent(@Nonnull String url, @Nonnull IOBiFunction<URLConnection, InputStream, T> function) throws IOException {
 		URLConnection conn = openConnection(url);
-		return function.apply(conn.getInputStream());
+		return function.apply(conn, conn.getInputStream());
 	}
 
-	private static void acceptContent(@Nonnull String url, @Nonnull IOConsumer<InputStream> consumer) throws IOException {
+	private static void acceptContent(@Nonnull String url, @Nonnull IOBiConsumer<URLConnection, InputStream> consumer) throws IOException {
 		URLConnection conn = openConnection(url);
-		consumer.accept(conn.getInputStream());
+		consumer.accept(conn, conn.getInputStream());
 	}
 
 	@Nonnull
@@ -84,9 +88,9 @@ public class Web {
 	}
 
 	@Nonnull
-	private static byte[] toBytes(@Nonnull InputStream input) throws IOException {
+	private static byte[] toBytes(@Nonnull InputStream input, int max, @Nullable TransferListener listener) throws IOException {
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		Stream.transfer(65536, input, output);
+		Stream.transfer(65536, input, output, max, listener);
 		return output.toByteArray();
 	}
 

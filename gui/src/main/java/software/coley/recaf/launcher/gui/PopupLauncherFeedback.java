@@ -4,6 +4,9 @@ import com.jgoodies.forms.factories.CC;
 import com.jgoodies.forms.layout.FormLayout;
 import software.coley.recaf.launcher.LauncherFeedback;
 import software.coley.recaf.launcher.LauncherGui;
+import software.coley.recaf.launcher.task.RecafTasks;
+import software.coley.recaf.launcher.util.StringUtil;
+import software.coley.recaf.launcher.util.TransferListener;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -49,6 +52,12 @@ public class PopupLauncherFeedback extends JDialog implements LauncherFeedback {
 		});
 	}
 
+	@Nonnull
+	@Override
+	public TransferListener provideRecafDownloadListener() {
+		return new ProgressBarTransferListener(RecafTasks.FALLBACK_RECAF_SIZE_BYTES, feedbackBar);
+	}
+
 	private void onCancel() {
 		System.exit(0);
 	}
@@ -76,6 +85,7 @@ public class PopupLauncherFeedback extends JDialog implements LauncherFeedback {
         //---- feedbackBar ----
         feedbackBar.setValue(-1);
         feedbackBar.setIndeterminate(true);
+        feedbackBar.setStringPainted(true);
         contentPane.add(feedbackBar, CC.xy(2, 5));
 
         //======== buttons ========
