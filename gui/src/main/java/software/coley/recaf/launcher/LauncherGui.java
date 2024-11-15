@@ -236,7 +236,8 @@ public class LauncherGui {
 			String javaExecutablePath = javaInstall == null ? null : javaInstall.getJavaExecutable().toString();
 			ExecutionTasks.RunResult result = ExecutionTasks.run(true, javaExecutablePath);
 			if (!result.isSuccess()) logger.error("Failed launching Recaf: " + result.getCodeDescription());
-			switch (result.getCode()) {
+			int code = result.getCode();
+			switch (code) {
 				case ExecutionTasks.ERR_NOT_INSTALLED:
 					if (uiContext)
 						JOptionPane.showMessageDialog(null, "Recaf is not installed", "Failed launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
@@ -266,6 +267,9 @@ public class LauncherGui {
 					}
 					break;
 			}
+
+			// Copy Recaf's exit code
+			System.exit(code);
 		} catch (IOException ex) {
 			logger.error("Encountered error running Recaf", ex);
 			if (uiContext) {
@@ -273,6 +277,7 @@ public class LauncherGui {
 				ex.printStackTrace(new PrintWriter(sw));
 				JOptionPane.showMessageDialog(null, sw.toString(), "Error encountered launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
 			}
+			System.exit(-1);
 		}
 	}
 
