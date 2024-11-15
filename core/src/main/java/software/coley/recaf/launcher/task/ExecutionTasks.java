@@ -132,10 +132,12 @@ public class ExecutionTasks {
 			// - base
 			// - graphics
 			// - controls
+			// - media
 			List<String> expected = new ArrayList<>();
 			expected.add("javafx-base");
 			expected.add("javafx-graphics");
 			expected.add("javafx-controls");
+			expected.add("javafx-media");
 			for (Path fxDependency : javafxDependencies) {
 				String name = fxDependency.getFileName().toString();
 				expected.removeIf(name::contains);
