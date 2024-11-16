@@ -94,7 +94,35 @@ public class JavaFxTasks {
 					.map(JavaFxTasks::mapToVersion)
 					.filter(Objects::nonNull)
 					.max(Comparator.naturalOrder());
-			return maxVersion.orElse(null);
+
+			// Not found, so we have no local artifacts cached
+			if (!maxVersion.isPresent())
+				return null;
+
+			// We should only yield the version if we have the 4 required artifacts of the same version
+			JavaFxVersion version = maxVersion.get();
+			String versionSuffix = version.getVersion();
+			Set<String> versionedArtifacts = Files.list(dependenciesDir)
+					.map(p -> p.getFileName().toString())
+					.filter(name -> name.contains(versionSuffix))
+					.collect(Collectors.toSet());
+
+			// If there are less than 4 artifacts, we can't possibly have all 4 required artifacts
+			if (versionedArtifacts.size() < 4)
+				return null;
+
+			// Check for each artifact
+			if (versionedArtifacts.stream().noneMatch(name -> name.contains("javafx-base-")))
+				return null;
+			if (versionedArtifacts.stream().noneMatch(name -> name.contains("javafx-graphics-")))
+				return null;
+			if (versionedArtifacts.stream().noneMatch(name -> name.contains("javafx-controls-")))
+				return null;
+			if (versionedArtifacts.stream().noneMatch(name -> name.contains("javafx-media-")))
+				return null;
+
+			// We have all four artifacts, and they're all using the same version
+			return version;
 		} catch (IOException ex) {
 			logger.error("Could not determine latest JavaFX version from local cache", ex);
 			return null;
