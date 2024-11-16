@@ -16,6 +16,7 @@ import software.coley.recaf.launcher.util.CommonPaths;
 import software.coley.recaf.launcher.util.Hashing;
 import software.coley.recaf.launcher.util.Loggers;
 import software.coley.recaf.launcher.util.Reflection;
+import software.coley.recaf.launcher.util.TransferListener;
 import software.coley.recaf.launcher.util.Web;
 
 import javax.annotation.Nonnull;
@@ -34,9 +35,11 @@ import java.util.Comparator;
 import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class JavaFxTasks {
 	/**
@@ -51,14 +54,29 @@ public class JavaFxTasks {
 	 * Code for local JavaFX detected, but cannot parse version info.
 	 */
 	public static final int ERR_CANNOT_PARSE = -3;
+	/**
+	 * Rough estimate of the max size of JavaFX artifacts in bytes.
+	 * <br>
+	 * The sizes of JavaFX artifacts are all under 3 MB, except for the web artifact which we do not use.
+	 */
+	public static final int FALLBACK_FX_SIZE_BYTES = 3_000_000;
 	public static final NavigableMap<Integer, Integer> JFX_SUPPORTED_JDK_MAP = new TreeMap<>();
 	private static final Logger logger = Loggers.newLogger();
 	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";
 	private static int runtimeVersion;
+	private static TransferListener downloadListener;
 
 	static {
 		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(0, 17); // Base case
 		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(23, 21); // JavaFX 23 requires Java 21 or higher)
+	}
+
+	/**
+	 * @param downloadListener
+	 * 		Listener to be notified of JFX download operations.
+	 */
+	public static void setDownloadListener(@Nullable TransferListener downloadListener) {
+		JavaFxTasks.downloadListener = downloadListener;
 	}
 
 	/**
@@ -418,6 +436,7 @@ public class JavaFxTasks {
 			String artifactUrlSha1 = artifactUrl + ".sha1";
 			Path dependenciesDir = CommonPaths.getDependenciesDir();
 			Path localPath = dependenciesDir.resolve(localArtifact);
+			Path localTmpPath = dependenciesDir.resolve(localArtifact + ".tmp");
 			boolean localPathExists = Files.exists(localPath);
 			if (force || !localPathExists) {
 				try {
@@ -435,16 +454,27 @@ public class JavaFxTasks {
 
 					int tries = 5;
 					while (tries-- > 0) {
-						// Download the file to the local path
-						Web.consumeStream(artifactUrl, stream -> Files.copy(stream, localPath, StandardCopyOption.REPLACE_EXISTING));
+						// Download the file to the local temporary path
+						if (downloadListener != null) downloadListener.init(artifactUrl);
+						byte[] download = Web.getBytes(artifactUrl, downloadListener);
+						Files.copy(new ByteArrayInputStream(download), localTmpPath, StandardCopyOption.REPLACE_EXISTING);
 
 						// Validate the file hash matches, try again if it does not match
-						actualSha1 = Hashing.sha1(Files.newInputStream(localPath));
-						if (actualSha1.equals(expectedSha1))
+						actualSha1 = Hashing.sha1(Files.newInputStream(localTmpPath));
+						if (actualSha1.equals(expectedSha1)) {
+							// The hash matches, move it to the intended path location
+							try {
+								Files.move(localTmpPath, localPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+							} catch (Exception ignored) {
+								Files.move(localTmpPath, localPath, StandardCopyOption.REPLACE_EXISTING);
+							}
+
+							// Break out of the while loop, move onto the next artifact
 							break;
-						else
+						} else {
 							logger.error("Downloaded FX artifact '{}' but the SHA1 hash did not match " +
 									"(expected={} vs local={}), retries remaining={}", artifact, tries, expectedSha1, actualSha1);
+						}
 					}
 				} catch (IOException ex) {
 					logger.error("Failed downloading FX artifact: '{}'", artifactUrl, ex);

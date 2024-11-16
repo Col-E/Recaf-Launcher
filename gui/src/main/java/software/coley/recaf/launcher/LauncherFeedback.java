@@ -16,6 +16,12 @@ public interface LauncherFeedback {
 	LauncherFeedback NOOP = new LauncherFeedback() {};
 
 	/**
+	 * @return Transfer listener to use for downloading JavaFX artifacts.
+	 */
+	@Nullable
+	default TransferListener provideJavaFxDownloadListener() { return null; }
+
+	/**
 	 * @return Transfer listener to use for downloading Recaf.
 	 */
 	@Nullable

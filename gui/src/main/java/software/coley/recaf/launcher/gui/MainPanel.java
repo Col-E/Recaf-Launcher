@@ -47,9 +47,13 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	private final LauncherFeedback feedback = new LauncherFeedback() {
 		@Nonnull
 		@Override
+		public TransferListener provideJavaFxDownloadListener() {
+			return new ProgressBarTransferListener(JavaFxTasks.FALLBACK_FX_SIZE_BYTES, javafxVersionProgress);
+		}
+
+		@Nonnull
+		@Override
 		public TransferListener provideRecafDownloadListener() {
-			// TODO: Need to do something like this for JavaFX
-			//  - But that is 4 downloads and not just 1
 			return new ProgressBarTransferListener(RecafTasks.FALLBACK_RECAF_SIZE_BYTES, recafVersionProgress);
 		}
 
@@ -234,7 +238,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 			updateJavafxButton.setEnabled(false);
 			javafxVersionLabel.setText("<html><i>Updating...</i></html>");
 
-			LauncherGui.updateJavafx();
+			LauncherGui.updateJavafx(feedback);
 
 			// Put the label back in its original place and re-enable the button
 			javafxVersionProgress.setIndeterminate(false);
@@ -389,6 +393,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 
         //---- javafxVersionProgress ----
         javafxVersionProgress.setIndeterminate(true);
+        javafxVersionProgress.setStringPainted(true);
         // JFormDesigner - End of component initialization  //GEN-END:initComponents  @formatter:on
 	}
 

@@ -171,6 +171,7 @@ new FormModel {
 		add( new FormComponent( "javax.swing.JProgressBar" ) {
 			name: "javafxVersionProgress"
 			"indeterminate": true
+			"stringPainted": true
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 545, 100 )
 			"size": new java.awt.Dimension( 146, 20 )

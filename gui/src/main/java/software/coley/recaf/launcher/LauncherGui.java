@@ -225,11 +225,13 @@ public class LauncherGui {
 			feedback.updateLaunchProgressMessage("Updating Recaf...");
 			updateRecaf(feedback);
 		}
-		if (javafxRequiresUpdate()) // Only update JavaFX when needed.
-		{
+
+		// Only update JavaFX when needed.
+		if (javafxRequiresUpdate()) {
 			feedback.updateLaunchProgressMessage("Updating JavaFX...");
-			updateJavafx();
+			updateJavafx(feedback);
 		}
+
 		feedback.updateLaunchProgressMessage("Launching Recaf...");
 		feedback.finishLaunchProgress();
 
@@ -291,6 +293,8 @@ public class LauncherGui {
 	 */
 	public static void updateRecaf(@Nonnull LauncherFeedback feedback) {
 		RecafTasks.setDownloadListener(feedback.provideRecafDownloadListener());
+
+		// Update from snapshots
 		VersionUpdateResult result = RecafTasks.updateFromSnapshot("master");
 
 		// Ensure the update passed
@@ -311,8 +315,13 @@ public class LauncherGui {
 
 	/**
 	 * Cleans the dependencies directory and downloads the latest JavaFX.
+	 *
+	 * @param feedback
+	 * 		Feedback mechanism for update progress.
 	 */
-	public static void updateJavafx() {
+	public static void updateJavafx(@Nonnull LauncherFeedback feedback) {
+		JavaFxTasks.setDownloadListener(feedback.provideJavaFxDownloadListener());
+
 		// Clean the slate by clearing the cache
 		JavaFxTasks.checkClearCache(true, false, 0, 0);
 

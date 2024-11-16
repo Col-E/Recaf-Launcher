@@ -54,6 +54,12 @@ public class PopupLauncherFeedback extends JDialog implements LauncherFeedback {
 
 	@Nonnull
 	@Override
+	public TransferListener provideJavaFxDownloadListener() {
+		return new ProgressBarTransferListener(RecafTasks.FALLBACK_RECAF_SIZE_BYTES, feedbackBar);
+	}
+
+	@Nonnull
+	@Override
 	public TransferListener provideRecafDownloadListener() {
 		return new ProgressBarTransferListener(RecafTasks.FALLBACK_RECAF_SIZE_BYTES, feedbackBar);
 	}
