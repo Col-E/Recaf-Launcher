@@ -160,6 +160,7 @@ public class RecafTasks {
 				Path recafJarTemp = CommonPaths.getRecafTempJar();
 				String downloadUrl = asset.getString("browser_download_url", null);
 				try {
+					if (downloadListener != null) downloadListener.init(downloadUrl);
 					byte[] download = Web.getBytes(downloadUrl, downloadListener);
 					Files.copy(new ByteArrayInputStream(download), recafJarTemp, StandardCopyOption.REPLACE_EXISTING);
 					try {
@@ -274,6 +275,7 @@ public class RecafTasks {
 				// https://nightly.link/Col-E/Recaf/actions/runs/<run-id>/snapshot-build.zip
 				//  - Feeling generous? You can sponsor the nightly link mirror service: https://github.com/sponsors/oprypin
 				String downloadUrl = "https://nightly.link/Col-E/Recaf/actions/runs/" + workflowRunId + "/snapshot-build.zip";
+				if (downloadListener != null) downloadListener.init(downloadUrl);
 				byte[] download = Web.getBytes(downloadUrl, downloadListener);
 				try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(download))) {
 					// Extract the jar from the zip
