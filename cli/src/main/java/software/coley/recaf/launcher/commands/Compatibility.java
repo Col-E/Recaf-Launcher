@@ -13,7 +13,7 @@ import java.util.concurrent.Callable;
 /**
  * Command for checking compatibility.
  */
-@Command(name = "compatibility>", description = "Checks the local system for compatibility with Recaf 4.X")
+@Command(name = "compatibility>", description = "Checks the current runtime for compatibility with Recaf 4.X")
 public class Compatibility implements Callable<Boolean> {
 	private static final Logger logger = Loggers.newLogger();
 
@@ -36,7 +36,7 @@ public class Compatibility implements Callable<Boolean> {
 	 * @return {@code true} when compatible.
 	 */
 	public static boolean isCompatible(boolean ignoreBundledFx, boolean skipSuggestions) {
-		EnumSet<CompatibilityTasks.CompatibilityProblem> problems = CompatibilityTasks.getCompatibilityProblem();
+		EnumSet<CompatibilityTasks.CompatibilityProblem> problems = CompatibilityTasks.getRuntimeCompatibilityProblems();
 		if (ignoreBundledFx) {
 			// Allow people to shoot themselves in the foot.
 			// This is ideally used in situations where people have 'JavaFX >= 21' and
