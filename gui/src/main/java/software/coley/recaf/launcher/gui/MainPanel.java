@@ -1,7 +1,6 @@
 package software.coley.recaf.launcher.gui;
 
 import com.jgoodies.forms.factories.CC;
-import com.jgoodies.forms.factories.DefaultComponentFactory;
 import com.jgoodies.forms.layout.FormLayout;
 import software.coley.recaf.launcher.LauncherFeedback;
 import software.coley.recaf.launcher.LauncherGui;
@@ -12,15 +11,12 @@ import software.coley.recaf.launcher.task.JavaFxTasks;
 import software.coley.recaf.launcher.task.RecafTasks;
 import software.coley.recaf.launcher.task.error.InvalidInstallationException;
 import software.coley.recaf.launcher.util.CommonPaths;
-import software.coley.recaf.launcher.util.StringUtil;
 import software.coley.recaf.launcher.util.TransferListener;
 
 import javax.annotation.Nonnull;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -155,7 +151,6 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 		} catch (InvalidInstallationException ex) {
 			recafVersionLabel.setText("<html><p style=\"color: #780000; font-weight: bold;\">Not installed</p></html>");
 		}
-		updateCompatibility();
 	}
 
 	/**
@@ -168,14 +163,6 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 		} else {
 			javafxVersionLabel.setText("<html><p style=\"color: #780000; font-weight: bold;\">Not installed</p></html>");
 		}
-		updateCompatibility();
-	}
-
-	/**
-	 * Updates compatibility messages.
-	 */
-	private void updateCompatibility() {
-		// TODO: Re-enable compatibility UI
 	}
 
 	@Nonnull
@@ -281,7 +268,6 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	private void initComponents() {
 		// JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
         // Generated using JFormDesigner non-commercial license
-        DefaultComponentFactory compFactory = DefaultComponentFactory.getInstance();
         versionsCard = new JPanel();
         JLabel recafVersionPrefix = new JLabel();
         recafVersionWrapper = new JPanel();
@@ -293,8 +279,6 @@ public class MainPanel extends BrowsableJavaVersionPanel {
         installCombo = new JComboBox<>();
         browseInstallButton = new JButton();
         launchButton = new JButton();
-        JComponent compatibilitySeparator = compFactory.createSeparator("Compatibility");
-        compatibilityOutputPanel = new JPanel();
         feedbackCard = new JPanel();
         feedbackLabel = new JLabel();
         feedbackProgressBar = new JProgressBar();
@@ -311,7 +295,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
         {
             versionsCard.setLayout(new FormLayout(
                 "default, $lcgap, default:grow, $lcgap, default",
-                "5*(default, $lgap), top:default:grow"));
+                "3*(default, $lgap), default"));
 
             //---- recafVersionPrefix ----
             recafVersionPrefix.setText("Recaf Version:");
@@ -361,17 +345,6 @@ public class MainPanel extends BrowsableJavaVersionPanel {
             launchButton.setIcon(new ImageIcon(getClass().getResource("/images/run.png")));
             launchButton.addActionListener(e -> launch());
             versionsCard.add(launchButton, CC.xy(5, 7));
-
-            //---- compatibilitySeparator ----
-            compatibilitySeparator.setVisible(false);
-            versionsCard.add(compatibilitySeparator, CC.xywh(1, 9, 5, 1));
-
-            //======== compatibilityOutputPanel ========
-            {
-                compatibilityOutputPanel.setVisible(false);
-                compatibilityOutputPanel.setLayout(new BoxLayout(compatibilityOutputPanel, BoxLayout.Y_AXIS));
-            }
-            versionsCard.add(compatibilityOutputPanel, CC.xywh(1, 11, 5, 1));
         }
 
         //======== feedbackCard ========
@@ -407,7 +380,6 @@ public class MainPanel extends BrowsableJavaVersionPanel {
     private JComboBox<JavaInstall> installCombo;
     private JButton browseInstallButton;
     private JButton launchButton;
-    private JPanel compatibilityOutputPanel;
     private JPanel feedbackCard;
     private JLabel feedbackLabel;
     private JProgressBar feedbackProgressBar;

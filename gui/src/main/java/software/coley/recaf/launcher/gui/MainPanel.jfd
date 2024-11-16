@@ -12,7 +12,7 @@ new FormModel {
 		} )
 		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
 			"$columnSpecs": "default, labelcompgap, default:grow, labelcompgap, default"
-			"$rowSpecs": "default, linegap, default, linegap, default, linegap, default, linegap, default, linegap, top:default:grow"
+			"$rowSpecs": "default, linegap, default, linegap, default, linegap, default"
 		} ) {
 			name: "versionsCard"
 			add( new FormComponent( "javax.swing.JLabel" ) {
@@ -102,29 +102,9 @@ new FormModel {
 				"gridX": 5
 				"gridY": 7
 			} )
-			add( new FormComponent( "com.jformdesigner.designer.wrapper.JGoodiesFormsSeparator" ) {
-				name: "compatibilitySeparator"
-				"text": "Compatibility"
-				"visible": false
-				auxiliary() {
-					"JavaCodeGenerator.variableLocal": true
-				}
-			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
-				"gridY": 9
-				"gridWidth": 5
-			} )
-			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class javax.swing.BoxLayout ) {
-				"axis": 1
-			} ) {
-				name: "compatibilityOutputPanel"
-				"visible": false
-			}, new FormLayoutConstraints( class com.jgoodies.forms.layout.CellConstraints ) {
-				"gridY": 11
-				"gridWidth": 5
-			} )
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 60 )
-			"size": new java.awt.Dimension( 320, 200 )
+			"size": new java.awt.Dimension( 320, 145 )
 		} )
 		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.jgoodies.forms.layout.FormLayout ) {
 			"$columnSpecs": "center:default:grow"

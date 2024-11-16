@@ -179,7 +179,7 @@ public class LauncherGui {
 		} else {
 			frame.getContentPane().add(new MainPanel(frame));
 		}
-		frame.setMinimumSize(new Dimension(550, 300));
+		frame.setMinimumSize(new Dimension(550, 180));
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
