@@ -159,7 +159,13 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	private void updateJavafxLabel() {
 		JavaFxVersion version = JavaFxTasks.detectCachedVersion();
 		if (version != null) {
-			javafxVersionLabel.setText(version.getVersion());
+			String versionName = version.getVersion();
+			if (version.getMajorVersion() <= JavaFxVersion.MIN_SUGGESTED) {
+				javafxVersionLabel.setText("<html><p>" + versionName +
+						"<span style=\"color: #780000; font-weight: bold;\"> (Outdated)</span></p></html>");
+			} else {
+				javafxVersionLabel.setText(versionName);
+			}
 		} else {
 			javafxVersionLabel.setText("<html><p style=\"color: #780000; font-weight: bold;\">Not installed</p></html>");
 		}
