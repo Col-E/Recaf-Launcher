@@ -15,7 +15,6 @@ import software.coley.recaf.launcher.info.SystemInformation;
 import software.coley.recaf.launcher.util.CommonPaths;
 import software.coley.recaf.launcher.util.Hashing;
 import software.coley.recaf.launcher.util.Loggers;
-import software.coley.recaf.launcher.util.Reflection;
 import software.coley.recaf.launcher.util.TransferListener;
 import software.coley.recaf.launcher.util.Web;
 
@@ -24,7 +23,6 @@ import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,23 +35,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class JavaFxTasks {
-	/**
-	 * Code for no local JavaFX detected.
-	 */
-	public static final int ERR_NO_FX_FOUND = -1;
-	/**
-	 * Code for local JavaFX detected, but cannot call method to get version info.
-	 */
-	public static final int ERR_CANNOT_REFLECT = -2;
-	/**
-	 * Code for local JavaFX detected, but cannot parse version info.
-	 */
-	public static final int ERR_CANNOT_PARSE = -3;
 	/**
 	 * Rough estimate of the max size of JavaFX artifacts in bytes.
 	 * <br>
@@ -63,7 +47,6 @@ public class JavaFxTasks {
 	public static final NavigableMap<Integer, Integer> JFX_SUPPORTED_JDK_MAP = new TreeMap<>();
 	private static final Logger logger = Loggers.newLogger();
 	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";
-	private static int runtimeVersion;
 	private static TransferListener downloadListener;
 
 	static {
@@ -223,57 +206,6 @@ public class JavaFxTasks {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * For failure codes, see: {@link #ERR_NO_FX_FOUND}, {@link #ERR_CANNOT_REFLECT}, {@link #ERR_CANNOT_PARSE}.
-	 *
-	 * @return JavaFX major version of current runtime, or failure code.
-	 */
-	public static int detectClasspathVersion() {
-		if (runtimeVersion == 0)
-			runtimeVersion = computeClasspathVersion();
-		return runtimeVersion;
-	}
-
-	private static int computeClasspathVersion() {
-		try {
-			// Required for newer JDK's - Allows global reflection.
-			logger.debug("Attempting to resolve JFX version in current classpath...");
-			Reflection.setup();
-
-			// Get class if available
-			String jfxVersionClass = "com.sun.javafx.runtime.VersionInfo";
-			Class<?> versionClass = Class.forName(jfxVersionClass);
-			logger.debug("JFX found in classpath, checking for version info...");
-
-			// Get release version string
-			logger.debug("Getting version info from classpath JFX 'VersionInfo' class...");
-			Method getVersion = versionClass.getDeclaredMethod("getVersion");
-			getVersion.setAccessible(true);
-			String version = String.valueOf(getVersion.invoke(null));
-
-			// Extract major version to int
-			// Should be the first int
-			logger.debug("Classpath's JavaFX version reported: '{}'", version);
-			Matcher matcher = Pattern.compile("\\d+").matcher(version);
-			if (matcher.find())
-				return Integer.parseInt(matcher.group());
-			logger.error("Could not resolve classpath's JavaFX version from given: '{}'", version);
-			return ERR_CANNOT_PARSE;
-		} catch (ClassNotFoundException ex) {
-			logger.debug("No JavaFX version class found in the current classpath");
-			return ERR_NO_FX_FOUND;
-		} catch (ReflectiveOperationException e) {
-			String[] cp = System.getProperty("java.class.path").split(File.pathSeparator);
-			String suffix = cp.length == 0 ? "" : ":\n - " + String.join("\n - ", cp);
-			logger.debug("Could not call 'VersionInfo.getVersion()' for JavaFX despite existing on the current classpath" + suffix);
-			return ERR_CANNOT_REFLECT;
-		} catch (Throwable t) {
-			logger.error("Could not call 'VersionInfo.getVersion()' for JavaFX despite existing on the current classpath\n" +
-					"Some unexpected error occurred that was not caught by Reflection.", t);
-			return ERR_CANNOT_REFLECT;
-		}
 	}
 
 	/**

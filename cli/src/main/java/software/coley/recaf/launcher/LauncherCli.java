@@ -35,7 +35,6 @@ public class LauncherCli {
 		}
 		StringBuilder sb = new StringBuilder("Java Properties:\n");
 		Map<String, String> properties = new TreeMap<>(SystemInformation.ALL_PROPERTIES);
-		properties.put("javafx.version.runtime", String.valueOf(JavaFxTasks.detectClasspathVersion()));
 		properties.put("javafx.version.cached", String.valueOf(JavaFxTasks.detectCachedVersion()));
 		properties.put("javafx.platform", JavaFxTasks.detectSystemPlatform().getClassifier());
 		properties.put("recaf.version", recafVersion.getVersion());

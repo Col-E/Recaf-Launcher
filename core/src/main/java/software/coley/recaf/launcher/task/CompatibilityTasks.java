@@ -43,10 +43,10 @@ public class CompatibilityTasks {
 			try {
 				int fx = fxVersion.getMajorVersion();
 				if (fx < JavaFxVersion.MIN_SUGGESTED)
-					set.add(CompatibilityProblem.OUTDATED_BUNDLED_JAVA_FX);
+					set.add(CompatibilityProblem.OUTDATED_JAVA_FX_ARTIFACTS);
 			} catch (Throwable t) {
 				// Can be thrown if the version string cannot be parsed to a major release integer
-				set.add(CompatibilityProblem.OUTDATED_BUNDLED_JAVA_FX);
+				set.add(CompatibilityProblem.OUTDATED_JAVA_FX_ARTIFACTS);
 			}
 		}
 
@@ -73,28 +73,6 @@ public class CompatibilityTasks {
 			set.add(CompatibilityProblem.OUTDATED_JAVA_VERSION);
 		}
 
-		// Warn if current VM includes incompatible JavaFX versions
-		int fxVersion = JavaFxTasks.detectClasspathVersion();
-		switch (fxVersion) {
-			case JavaFxTasks.ERR_NO_FX_FOUND:
-				// We good, no JavaFX found locally
-				break;
-			case JavaFxTasks.ERR_CANNOT_REFLECT:
-			case JavaFxTasks.ERR_CANNOT_PARSE:
-				// Unknown JavaFX version, assume its bad.
-				set.add(CompatibilityProblem.OUTDATED_BUNDLED_JAVA_FX);
-				break;
-			default:
-				// Recaf uses some versions of JavaFX 20, but pulls in newer versions
-				// for bug fixes and performance improvements. We'll suggest using 21+
-				// and complain about anything less for now.
-				if (fxVersion < JavaFxVersion.MIN_SUGGESTED) {
-					set.add(CompatibilityProblem.OUTDATED_BUNDLED_JAVA_FX);
-				} else {
-					set.add(CompatibilityProblem.BUNDLED_JAVA_FX);
-				}
-		}
-
 		return set;
 	}
 
@@ -104,8 +82,7 @@ public class CompatibilityTasks {
 	public enum CompatibilityProblem {
 		UNKNOWN_JAVA_VERSION(() -> "Unknown Java version"),
 		OUTDATED_JAVA_VERSION(() -> "Outdated Java version (" + JavaVersion.get() + "), requires 22+"),
-		OUTDATED_BUNDLED_JAVA_FX(() -> "Outdated JavaFX bundled in Java Runtime (" + JavaFxTasks.detectClasspathVersion() + ")"),
-		BUNDLED_JAVA_FX(() -> "JavaFX bundled in Java Runtime (" + JavaFxTasks.detectClasspathVersion() + ")"),
+		OUTDATED_JAVA_FX_ARTIFACTS(() -> "Outdated JavaFX artifacts"),
 		NO_CACHED_JAVA_FX(() -> "Missing JavaFX artifacts");
 
 		private final Supplier<String> message;
