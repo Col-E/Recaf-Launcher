@@ -3,6 +3,7 @@ rootProject.name = 'recaf-launcher'
 include 'core'
 include 'cli'
 include 'gui'
+include 'app-launcher'
 
 buildCache {
     local {
@@ -10,3 +11,4 @@ buildCache {
         directory = new File('build/cache')
     }
 }
+
