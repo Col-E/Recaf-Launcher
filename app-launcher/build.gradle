@@ -1,0 +1,11 @@
+plugins {
+    id 'application'
+}
+
+application {
+    mainClass = 'software.coley.recaf.launcher.ApplicationLauncher'
+}
+
+jar {
+    archiveFileName = "recaf-${project.name}-${project.version}.jar"
+}

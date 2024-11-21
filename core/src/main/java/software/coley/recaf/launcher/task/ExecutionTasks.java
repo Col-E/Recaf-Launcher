@@ -1,6 +1,7 @@
 package software.coley.recaf.launcher.task;
 
 import org.slf4j.Logger;
+import software.coley.recaf.launcher.ApplicationLauncher;
 import software.coley.recaf.launcher.info.JavaFxPlatform;
 import software.coley.recaf.launcher.info.JavaFxVersion;
 import software.coley.recaf.launcher.info.RecafVersion;
@@ -11,21 +12,24 @@ import software.coley.recaf.launcher.util.StreamGobbler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Tasks for executing Recaf.
  */
 public class ExecutionTasks {
 	private static final Logger logger = Loggers.newLogger();
-	private static final String MAIN_CLASS = "software.coley.recaf.Main";
+	private static final String MAIN_CLASS = "software.coley.recaf.launcher.ApplicationLauncher";
 	// Launcher specific constants
 	public static final int ERR_NOT_INSTALLED = 50;
 	public static final int ERR_NO_JFX = 51;
@@ -67,66 +71,45 @@ public class ExecutionTasks {
 		}
 
 		JavaFxPlatform javaFxPlatform = JavaFxTasks.detectSystemPlatform();
-		JavaFxVersion javaFxVersion = null;
 
-		// Only use runtime version if we're using the current runtime's executable to launch the process.
-		boolean useRuntimeFx = false;
-		if (javaExecutablePath == null) {
-			int javaFxRuntimeVersion = JavaFxTasks.detectClasspathVersion();
-			if (javaFxRuntimeVersion >= JavaFxVersion.MIN_SUGGESTED) {
-				useRuntimeFx = true;
-				javaFxVersion = new JavaFxVersion(javaFxRuntimeVersion);
-				logger.info("Using current runtime version of JavaFX: {}", javaFxRuntimeVersion);
-			} else {
-				logger.error("The current runtime bundles JavaFX that is too old ({}).\n" +
-						"- Try running with a JDK that has an up-to-date JavaFX bundled\n" +
-						"- Or use a JDK that does not bundle JavaFX and let the launcher grab it for you", javaFxVersion);
-				return new RunResult(ERR_FX_OLD_VERSION);
-			}
-		}
+		// Pull the JavaFX version from our dependency download cache.
+		JavaFxVersion javaFxVersion = JavaFxTasks.detectCachedVersion();
 
-		// If we're not using the runtime version, pull the version from our dependency download cache.
+		// Ensure a version was found
 		if (javaFxVersion == null) {
-			javaFxVersion = JavaFxTasks.detectCachedVersion();
-
-			// Ensure a version was found
-			if (javaFxVersion == null) {
-				logger.error("No local cached version of JavaFX found.\n" +
-						"- Try running with 'update-jfx'\n" +
-						"- Or use a JDK that bundles JavaFX");
-				return new RunResult(ERR_NO_JFX);
-			}
-
-			// Ensure a valid version was found
-			if (javaFxVersion.getMajorVersion() < JavaFxVersion.MIN_SUGGESTED) {
-				logger.error("The cached version of JavaFX was too old ({}).\n" +
-						"- Try running with 'update-jfx'\n" +
-						"- Or use a JDK that bundles JavaFX", javaFxVersion);
-				return new RunResult(ERR_FX_OLD_VERSION);
-			}
-
-			logger.info("Using cached version of JavaFX: {}", javaFxVersion);
+			logger.error("No local cached version of JavaFX found.\n" +
+					"- Try running with 'update-jfx'");
+			return new RunResult(ERR_NO_JFX);
 		}
+
+		// Ensure a valid version was found
+		if (javaFxVersion.getMajorVersion() < JavaFxVersion.MIN_SUGGESTED) {
+			logger.error("The cached version of JavaFX was too old ({}).\n" +
+					"- Try running with 'update-jfx'", javaFxVersion);
+			return new RunResult(ERR_FX_OLD_VERSION);
+		}
+
+		logger.info("Using cached version of JavaFX: {}", javaFxVersion);
 
 		// Build classpath:
 		//  - Recaf jar
 		//  - JavaFX jars
 		List<Path> classpathItems = new ArrayList<>();
 		classpathItems.add(recafDirectory.relativize(CommonPaths.getRecafJar()));
-		if (!useRuntimeFx) {
-			// If the current runtime has JavaFX we don't need to include the dependencies' dir.
-			// The runtime should provide JavaFX's classes and native libraries.
+		{
 			Path dependenciesDir = CommonPaths.getDependenciesDir();
 			if (!Files.isDirectory(dependenciesDir))
 				return new RunResult(ERR_NO_JFX);
 			String versionIdentifier = javaFxVersion.getVersion() + "-" + javaFxPlatform.getClassifier();
-			List<Path> javafxDependencies = Files.list(dependenciesDir)
-					.filter(path -> {
-						String fileName = path.getFileName().toString();
-						return fileName.contains(versionIdentifier);
-					})
-					.map(recafDirectory::relativize)
-					.collect(Collectors.toList());
+			List<Path> javafxDependencies;
+			try (Stream<Path> pathStream = Files.list(dependenciesDir)) {
+				javafxDependencies = pathStream
+						.filter(path -> {
+							String fileName = path.getFileName().toString();
+							return fileName.contains(versionIdentifier);
+						})
+						.collect(Collectors.toList());
+			}
 
 			// Validate we found:
 			// - base
@@ -143,7 +126,7 @@ public class ExecutionTasks {
 				expected.removeIf(name::contains);
 			}
 			if (!expected.isEmpty()) {
-				logger.error("Missing the following JavaFX artifacts: " + String.join(", ", expected));
+				logger.error("Missing the following JavaFX artifacts: {}", String.join(", ", expected));
 				return new RunResult(ERR_NO_JFX);
 			}
 
@@ -151,10 +134,13 @@ public class ExecutionTasks {
 			classpathItems.addAll(javafxDependencies);
 		}
 
-		// Build classpath string.
-		String classpath = classpathItems.stream()
-				.map(Path::toString)
-				.collect(Collectors.joining(File.pathSeparator));
+		// Get location of the launch wrapper.
+		String classpath;
+		try {
+			classpath = Paths.get(ApplicationLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+		} catch (URISyntaxException ex) {
+			throw new IOException("Error constructing classpath", ex);
+		}
 
 		// Resolve the Java executable used by the current JVM.
 		if (javaExecutablePath == null)
@@ -189,6 +175,13 @@ public class ExecutionTasks {
 		}
 
 		try {
+			try (DataOutputStream pout = new DataOutputStream(recafProcess.getOutputStream())) {
+				// Write classpath entries.
+				for (Path classpathItem : classpathItems) {
+					pout.writeUTF(classpathItem.toString());
+				}
+				pout.writeUTF("");
+			}
 			// Handle non-standard exit codes. Recaf has a few for special cases.
 			int exitCode = recafProcess.waitFor();
 			switch (exitCode) {
