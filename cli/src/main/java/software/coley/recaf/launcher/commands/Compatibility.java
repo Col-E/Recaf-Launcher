@@ -19,31 +19,20 @@ public class Compatibility implements Callable<Boolean> {
 
 	@Option(names = {"-ss", "--skipSuggestions"}, description = "Skip solutions to detected problems")
 	private boolean skipSuggestions;
-	@Option(names = {"-ifx", "--ignoreBundledFx"}, description = "Ignore problems with the local system's bundled JavaFX version")
-	private boolean ignoreBundledFx;
 
 	@Override
 	public Boolean call() {
-		return isCompatible(ignoreBundledFx, skipSuggestions);
+		return isCompatible(skipSuggestions);
 	}
 
 	/**
-	 * @param ignoreBundledFx
-	 * 		Ignore problems with the local system's bundled JavaFX version.
 	 * @param skipSuggestions
 	 * 		Skip logging solutions to detected problems.
 	 *
 	 * @return {@code true} when compatible.
 	 */
-	public static boolean isCompatible(boolean ignoreBundledFx, boolean skipSuggestions) {
+	public static boolean isCompatible(boolean skipSuggestions) {
 		EnumSet<CompatibilityTasks.CompatibilityProblem> problems = CompatibilityTasks.getRuntimeCompatibilityProblems();
-		if (ignoreBundledFx) {
-			// Allow people to shoot themselves in the foot.
-			// This is ideally used in situations where people have 'JavaFX >= 21' and
-			// there are no API incompatibilities with Recaf.
-			problems.remove(CompatibilityTasks.CompatibilityProblem.OUTDATED_BUNDLED_JAVA_FX);
-			problems.remove(CompatibilityTasks.CompatibilityProblem.BUNDLED_JAVA_FX);
-		}
 
 		// Check and log problems
 		int problemCount = problems.size();

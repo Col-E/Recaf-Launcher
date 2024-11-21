@@ -2,7 +2,6 @@ package software.coley.recaf.launcher.commands;
 
 import org.slf4j.Logger;
 import picocli.CommandLine.Command;
-import software.coley.recaf.launcher.info.JavaFxVersion;
 import software.coley.recaf.launcher.task.ExecutionTasks;
 import software.coley.recaf.launcher.task.JavaFxTasks;
 import software.coley.recaf.launcher.task.RecafTasks;
@@ -29,19 +28,13 @@ public class Auto implements Callable<Void> {
 	@Override
 	public Void call() {
 		// Ensure compatibility
-		if (!Compatibility.isCompatible(false, false))
+		if (!Compatibility.isCompatible(false))
 			return null;
 
 		// Update JavaFX when possible, clearing outdated cache entries when it gets too cluttered
-		int jfxRuntimeVersion = JavaFxTasks.detectClasspathVersion();
-		if (jfxRuntimeVersion <= 0) {
-			JavaFxTasks.checkClearCache(false, true, 30, 64_000_000);
-			if (JavaFxTasks.update(false) == null)
-				return null;
-		} else if (jfxRuntimeVersion < JavaFxVersion.MIN_SUGGESTED) {
-			logger.warn("The current JDK bundles JavaFX {} which is less than the minimum suggested version of JavaFX {}",
-					jfxRuntimeVersion, JavaFxVersion.MIN_SUGGESTED);
-		}
+		JavaFxTasks.checkClearCache(false, true, 30, 64_000_000);
+		if (JavaFxTasks.update(false) == null)
+			return null;
 
 		// Update Recaf.
 		// TODO: When released, replace with - UpdateRecaf.update(true);
