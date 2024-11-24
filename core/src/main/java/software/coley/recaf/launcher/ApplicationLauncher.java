@@ -30,15 +30,19 @@ public final class ApplicationLauncher {
 		// Read classpath urls from input
 		AppClassLoader classLoader;
 		{
+			System.out.println("Receiving classpath entries from parent process...");
 			List<URL> urls = new ArrayList<>(8);
 			DataInputStream in = new DataInputStream(System.in);
 			String path;
 			while (!(path = in.readUTF()).isEmpty())
 				urls.add(Paths.get(path).toUri().toURL());
-			classLoader = new AppClassLoader(urls.toArray(new URL[0]), ApplicationLauncher.class.getClassLoader().getParent());
+			ClassLoader appClassLoader = ApplicationLauncher.class.getClassLoader();
+			ClassLoader platformClassLoader = appClassLoader.getParent();
+			classLoader = new AppClassLoader(urls.toArray(new URL[0]), platformClassLoader);
 		}
 
 		// Get the main class
+		System.out.println("Resolving Recaf entry-point...");
 		URL manifestUrl = classLoader.findResource(JarFile.MANIFEST_NAME);
 		if (manifestUrl == null) {
 			System.err.printf("Cannot locate '%s' entry%n", JarFile.MANIFEST_NAME);

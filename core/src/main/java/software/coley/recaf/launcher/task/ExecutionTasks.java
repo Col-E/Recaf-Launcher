@@ -13,7 +13,6 @@ import software.coley.recaf.launcher.util.StreamGobbler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -136,9 +135,9 @@ public class ExecutionTasks {
 		}
 
 		// Get location of the launch wrapper.
-		String classpath;
+		String launchWrapperclasspath;
 		try {
-			classpath = Paths.get(ApplicationLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+			launchWrapperclasspath = Paths.get(ApplicationLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
 		} catch (URISyntaxException ex) {
 			throw new IOException("Error constructing classpath", ex);
 		}
@@ -154,7 +153,7 @@ public class ExecutionTasks {
 				installedVersion.getVersion(), javaFxVersion.getVersion(), javaFxPlatform.getClassifier());
 
 		// Create the process.
-		ProcessBuilder builder = new ProcessBuilder(javaExecutablePath, "-cp", classpath, MAIN_CLASS);
+		ProcessBuilder builder = new ProcessBuilder(javaExecutablePath, "-cp", launchWrapperclasspath, MAIN_CLASS);
 		builder.directory(recafDirectory.toFile());
 		Process recafProcess = builder.start();
 
