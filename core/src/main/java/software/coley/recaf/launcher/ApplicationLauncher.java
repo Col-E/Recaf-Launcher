@@ -12,21 +12,33 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+/**
+ * Launch wrapper which reads classpath entries from {@link System#in}, detects the main-class, and invokes it.
+ */
 public final class ApplicationLauncher {
 	private ApplicationLauncher() {
 	}
 
+	/**
+	 * @param args
+	 * 		Input arguments to pass to Recaf.
+	 *
+	 * @throws Throwable
+	 * 		When reading {@link System#in} fails, or reading from the current classpath manifest fails.
+	 */
 	public static void main(String[] args) throws Throwable {
+		// Read classpath urls from input
 		AppClassLoader classLoader;
 		{
 			List<URL> urls = new ArrayList<>(8);
 			DataInputStream in = new DataInputStream(System.in);
 			String path;
-			while (!(path = in.readUTF()).isEmpty()) {
+			while (!(path = in.readUTF()).isEmpty())
 				urls.add(Paths.get(path).toUri().toURL());
-			}
 			classLoader = new AppClassLoader(urls.toArray(new URL[0]), ApplicationLauncher.class.getClassLoader().getParent());
 		}
+
+		// Get the main class
 		URL manifestUrl = classLoader.findResource(JarFile.MANIFEST_NAME);
 		if (manifestUrl == null) {
 			System.err.printf("Cannot locate '%s' entry%n", JarFile.MANIFEST_NAME);
@@ -41,6 +53,8 @@ public final class ApplicationLauncher {
 			System.err.printf("Cannot find '%s' in '%s'%n", Attributes.Name.MAIN_CLASS, JarFile.MANIFEST_NAME);
 			System.exit(2);
 		}
+
+		// Launch Recaf
 		System.out.println("Launching Recaf...");
 		Thread.currentThread().setContextClassLoader(classLoader);
 		MethodHandles.lookup()
