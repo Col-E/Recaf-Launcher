@@ -108,6 +108,7 @@ public class ExecutionTasks {
 							String fileName = path.getFileName().toString();
 							return fileName.contains(versionIdentifier);
 						})
+						.map(recafDirectory::relativize)
 						.collect(Collectors.toList());
 			}
 
