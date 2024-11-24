@@ -93,31 +93,24 @@ public class JavaEnvTasks {
 	 */
 	private static void scanForWindowsJavaPaths() {
 		String homeProp = System.getProperty("java.home");
-		if (homeProp != null) {
+		if (homeProp != null)
 			addJavaInstall(Paths.get(homeProp).resolve("bin/java.exe"));
-		}
 
 		// Check home
 		String homeEnv = System.getenv("JAVA_HOME");
 		if (homeEnv != null) {
 			Path homePath = Paths.get(homeEnv);
-			if (Files.isDirectory(homePath)) {
-				Path javaPath = homePath.resolve("bin/java.exe");
-				if (Files.exists(javaPath))
-					addJavaInstall(javaPath);
-			}
+			if (Files.isDirectory(homePath))
+				addJavaInstall(homePath.resolve("bin/java.exe"));
 		}
 
 		// Check system path for java entries.
 		String path = System.getenv("PATH");
 		if (path != null) {
 			String[] entries = path.split(";");
-			for (String entry : entries) {
-				if (entry.endsWith("bin")) {
-					Path javaPath = Paths.get(entry).resolve("java.exe");
-					addJavaInstall(javaPath);
-				}
-			}
+			for (String entry : entries)
+				if (entry.endsWith("bin"))
+					addJavaInstall(Paths.get(entry).resolve("java.exe"));
 		}
 
 		// Check common install locations.
@@ -135,11 +128,7 @@ public class JavaEnvTasks {
 			if (Files.isDirectory(rootPath)) {
 				try (Stream<Path> subDirStream = Files.list(rootPath)) {
 					subDirStream.filter(subDir -> Files.exists(subDir.resolve("bin/java.exe")))
-							.forEach(subDir -> {
-								Path javaPath = subDir.resolve("bin/java.exe");
-								if (Files.exists(javaPath))
-									addJavaInstall(javaPath);
-							});
+							.forEach(subDir -> addJavaInstall(subDir.resolve("bin/java.exe")));
 				} catch (IOException ignored) {
 					// Skip
 				}
@@ -167,6 +156,10 @@ public class JavaEnvTasks {
 		String execName = javaExecutable.getFileName().toString();
 		if (!execName.endsWith("java") && !javaExecutable.endsWith("java.exe")
 				&& !execName.endsWith("javaw") && !javaExecutable.endsWith("javaw.exe"))
+			return AdditionResult.ERR_NOT_JAVA_EXEC;
+
+		// Validate the given path points to a file that exists
+		if (!Files.exists(javaExecutable))
 			return AdditionResult.ERR_NOT_JAVA_EXEC;
 
 		// Validate path structure
