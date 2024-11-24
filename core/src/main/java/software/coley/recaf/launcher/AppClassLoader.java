@@ -1,17 +1,20 @@
 package software.coley.recaf.launcher;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Enumeration;
 
+/**
+ * Recaf application classloader.
+ */
 final class AppClassLoader extends URLClassLoader {
-
 	static {
 		ClassLoader.registerAsParallelCapable();
 	}
 
-	AppClassLoader(URL[] urls, ClassLoader parent) {
+	AppClassLoader(@Nonnull URL[] urls, @Nonnull ClassLoader parent) {
 		super(urls, parent);
 	}
 
@@ -54,9 +57,8 @@ final class AppClassLoader extends URLClassLoader {
 	@Override
 	public URL getResource(String name) {
 		URL url = findResource(name);
-		if (url == null) {
+		if (url == null)
 			url = getParent().getResource(name);
-		}
 		return url;
 	}
 }

@@ -175,13 +175,13 @@ public class ExecutionTasks {
 		}
 
 		try {
+			// Write classpath entries to the launcher wrapper
 			try (DataOutputStream pout = new DataOutputStream(recafProcess.getOutputStream())) {
-				// Write classpath entries.
-				for (Path classpathItem : classpathItems) {
+				for (Path classpathItem : classpathItems)
 					pout.writeUTF(classpathItem.toString());
-				}
 				pout.writeUTF("");
 			}
+
 			// Handle non-standard exit codes. Recaf has a few for special cases.
 			int exitCode = recafProcess.waitFor();
 			switch (exitCode) {
