@@ -190,6 +190,11 @@ public class RecafTasks {
 		return updateFromSnapshot(name -> branch == null || branch.equalsIgnoreCase(name));
 	}
 
+	// TODO: Snapshot update info
+	//  - https://api.github.com/repos/Col-E/Recaf/commits
+	//    - array[0].commit.author.date --> latest update
+	//  - display "there are x commits ahead" for snapshots + the date of the latest vs current version
+
 	/**
 	 * @param branchMatcher
 	 * 		Filter to whitelist only certain branches, or {@code null} for any branch.
