@@ -1,6 +1,7 @@
 package software.coley.recaf.launcher;
 
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -31,14 +32,19 @@ public final class ApplicationLauncher {
 		AppClassLoader classLoader;
 		{
 			System.out.println("Receiving classpath entries from parent process...");
+			StringBuilder classpathProperty = new StringBuilder(1024);
 			List<URL> urls = new ArrayList<>(8);
 			DataInputStream in = new DataInputStream(System.in);
 			String path;
-			while (!(path = in.readUTF()).isEmpty())
+			while (!(path = in.readUTF()).isEmpty()) {
 				urls.add(Paths.get(path).toUri().toURL());
+				classpathProperty.append(path).append(File.pathSeparatorChar);
+			}
+			classpathProperty.setLength(classpathProperty.length() - 1);
 			ClassLoader appClassLoader = ApplicationLauncher.class.getClassLoader();
 			ClassLoader platformClassLoader = appClassLoader.getParent();
 			classLoader = new AppClassLoader(urls.toArray(new URL[0]), platformClassLoader);
+			System.setProperty("java.class.path", classpathProperty.toString());
 		}
 
 		// Get the main class
@@ -57,6 +63,7 @@ public final class ApplicationLauncher {
 			System.err.printf("Cannot find '%s' in '%s'%n", Attributes.Name.MAIN_CLASS, JarFile.MANIFEST_NAME);
 			System.exit(2);
 		}
+
 
 		// Launch Recaf
 		System.out.println("Launching Recaf...");
