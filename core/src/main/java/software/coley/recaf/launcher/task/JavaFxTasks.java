@@ -223,7 +223,7 @@ public class JavaFxTasks {
 		long cachedFileSize = getCachedFileSize();
 		logger.debug("JFX cache:\n"
 				+ " - Files: {}\n"
-				+ " - Size:  {}", cachedFileSize, cachedFileSize);
+				+ " - Size:  {}", cachedFileCount, cachedFileSize);
 		if (clear ||
 				cachedFileCount > maxCacheCount ||
 				cachedFileSize > maxCacheSize)
