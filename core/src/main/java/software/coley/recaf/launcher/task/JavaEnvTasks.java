@@ -96,12 +96,25 @@ public class JavaEnvTasks {
 		if (homeProp != null)
 			addJavaInstall(Paths.get(homeProp).resolve("bin/java.exe"));
 
-		// Check home
+		// Check java home
 		String homeEnv = System.getenv("JAVA_HOME");
 		if (homeEnv != null) {
 			Path homePath = Paths.get(homeEnv);
 			if (Files.isDirectory(homePath))
 				addJavaInstall(homePath.resolve("bin/java.exe"));
+		}
+
+		// Check '%user%/.jdks'
+		String homePath = System.getProperty("user.home");
+		if (homePath != null) {
+			Path jdksDir = Paths.get(homePath, ".jdks");
+			if (Files.isDirectory(jdksDir))
+				try (Stream<Path> subDirStream = Files.list(jdksDir)) {
+					subDirStream.filter(subDir -> Files.exists(subDir.resolve("bin/java.exe")))
+							.forEach(subDir -> addJavaInstall(subDir.resolve("bin/java.exe")));
+				} catch (IOException ignored) {
+					// Skip
+				}
 		}
 
 		// Check system path for java entries.
@@ -117,6 +130,7 @@ public class JavaEnvTasks {
 		String[] javaRoots = {
 				"C:/Program Files/Amazon Corretto/",
 				"C:/Program Files/Eclipse Adoptium/",
+				"C:/Program Files/Eclipse Foundation/",
 				"C:/Program Files/BellSoft/",
 				"C:/Program Files/Java/",
 				"C:/Program Files/Microsoft/",
