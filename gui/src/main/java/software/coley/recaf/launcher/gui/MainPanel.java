@@ -81,7 +81,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 
 		watchFuture = CompletableFuture.runAsync(() -> {
 			try {
-				ResettableDelayTask delayableUpdate = new ResettableDelayTask(() -> {
+				ResettableDelayTask delayableUpdate = new ResettableDelayTask("Label-Update", () -> {
 					updateJavafxLabel();
 					updateRecafLabel();
 				}, 500, TimeUnit.MILLISECONDS);
