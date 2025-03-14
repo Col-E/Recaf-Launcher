@@ -10,12 +10,9 @@ A simple solution for running Recaf.
 
 ![Screenshot of GUI and CLI](media/preview.png)
 
-For more details see the dedicated `README.md` for the GUI and CLI sub-modules:
-
-- [**GUI**: Graphical user interface](gui/README.md)
-- [**CLI**: Command line interface](cli/README.md)
+For more details see the [Recaf user-guide page on using the launcher as a GUI or CLI](https://recaf.coley.software/user/install/via-launcher.html).
 
 ## Additional Information
 
-- [Why does this launcher exist?](WHY.md)
-- [How do I manually run Recaf without this launcher?](MANUAL.md)
+- [Why does this launcher exist?](https://recaf.coley.software/user/install/why.html)
+- [How do I manually run Recaf without this launcher?](https://recaf.coley.software/user/install/via-manual.html)
