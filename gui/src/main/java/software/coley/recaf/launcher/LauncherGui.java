@@ -232,16 +232,43 @@ public class LauncherGui {
 			updateJavafx(feedback);
 		}
 
+		// Notify we're at the launch step.
 		feedback.updateLaunchProgressMessage("Launching Recaf...");
-		feedback.finishLaunchProgress();
+
+		// Create a future to call the feedback finish method.
+		// We may need to do this async since a successful run actually blocks this thread.
+		CompletableFuture<Boolean> launchFuture = new CompletableFuture<>();
+		launchFuture.whenComplete((success, error) -> {
+			if (error != null) success = false;
+			feedback.finishLaunchProgress(success);
+		});
 
 		try {
 			JavaInstall javaInstall = config.getJavaInstall();
 			String javaExecutablePath = javaInstall == null ? null : javaInstall.getJavaExecutable().toString();
+
+			// The "run" task blocks the thread. So if we don't see any result in the next ~2 seconds we assume
+			// that it was a success. If the launch fails it will usually be pretty much an instant failure.
+			new Thread(() -> {
+				try {Thread.sleep(2000);} catch (InterruptedException ignored) {}
+				launchFuture.complete(true);
+			}).start();
 			ExecutionTasks.RunResult result = ExecutionTasks.run(true, javaExecutablePath);
-			if (!result.isSuccess()) logger.error("Failed launching Recaf: " + result.getCodeDescription());
+
+			// At this point Recaf has closed. We want to complete the launch future if it hasn't been completed already.
+			// If Recaf closed normally we want to kill the launcher process. Otherwise, we want to stick around to
+			// report any problems.
+			if (!result.isSuccess()) {
+				logger.error("Failed launching Recaf: " + result.getCodeDescription());
+				launchFuture.complete(false);
+			} else {
+				launchFuture.complete(true);
+			}
 			int code = result.getCode();
 			switch (code) {
+				case ExecutionTasks.SUCCESS:
+					System.exit(0);
+					break;
 				case ExecutionTasks.ERR_NOT_INSTALLED:
 					if (uiContext)
 						JOptionPane.showMessageDialog(null, "Recaf is not installed", "Failed launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
@@ -249,9 +276,6 @@ public class LauncherGui {
 				case ExecutionTasks.ERR_NO_JFX:
 					if (uiContext)
 						JOptionPane.showMessageDialog(null, "JavaFX is not installed", "Failed launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
-					break;
-				case ExecutionTasks.SUCCESS:
-					// no-op
 					break;
 				default:
 					if (uiContext) {
@@ -271,9 +295,6 @@ public class LauncherGui {
 					}
 					break;
 			}
-
-			// Copy Recaf's exit code
-			System.exit(code);
 		} catch (IOException ex) {
 			logger.error("Encountered error running Recaf", ex);
 			if (uiContext) {
@@ -281,7 +302,7 @@ public class LauncherGui {
 				ex.printStackTrace(new PrintWriter(sw));
 				JOptionPane.showMessageDialog(null, sw.toString(), "Error encountered launching Recaf", JOptionPane.ERROR_MESSAGE, recafIcon);
 			}
-			System.exit(-1);
+			launchFuture.completeExceptionally(ex);
 		}
 	}
 

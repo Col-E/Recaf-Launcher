@@ -37,6 +37,10 @@ public interface LauncherFeedback {
 
 	/**
 	 * Called to notify the feedback implementation the launcher is finished {@link ExecutionTasks#run(boolean, String)}.
+	 *
+	 * @param success
+	 *        {@code true} when Recaf launched successfully.
+	 *        {@code false} when Recaf failed to launch.
 	 */
-	default void finishLaunchProgress() {}
+	default void finishLaunchProgress(boolean success) {}
 }

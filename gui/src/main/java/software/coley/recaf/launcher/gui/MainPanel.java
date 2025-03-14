@@ -24,6 +24,7 @@ import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Container;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -40,35 +41,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	private static final String CARD_INFO = "info";
 	private static final String CARD_FEEDBACK = "feedback";
 	private final JFrame frame;
-	private final LauncherFeedback feedback = new LauncherFeedback() {
-		@Nonnull
-		@Override
-		public TransferListener provideJavaFxDownloadListener() {
-			return new ProgressBarTransferListener(JavaFxTasks.FALLBACK_FX_SIZE_BYTES, javafxVersionProgress);
-		}
-
-		@Nonnull
-		@Override
-		public TransferListener provideRecafDownloadListener() {
-			return new ProgressBarTransferListener(RecafTasks.FALLBACK_RECAF_SIZE_BYTES, recafVersionProgress);
-		}
-
-		@Override
-		public void updateLaunchProgressMessage(@Nonnull String message) {
-			feedbackLabel.setText(message);
-		}
-
-		@Override
-		public void finishLaunchProgress() {
-			feedbackLabel.setText("Launching!");
-			feedbackProgressBar.setIndeterminate(false);
-			feedbackProgressBar.setValue(100);
-
-			// Hide the UI now that the launch is complete.
-			frame.setVisible(false);
-			frame.dispose();
-		}
-	};
+	private final LauncherFeedback feedback = new FeedbackImpl(this);
 	private CompletableFuture<Void> watchFuture;
 	private boolean watching = true;
 
@@ -248,11 +221,9 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	 * @see #launchButton
 	 */
 	private void launch() {
-		CompletableFuture.runAsync(() -> {
-			// Cancel watch service
-			watching = false;
-			if (watchFuture != null) watchFuture.cancel(true);
 
+
+		CompletableFuture.runAsync(() -> {
 			// Swap to the feedback display card.
 			CardLayout layout = (CardLayout) getLayout();
 			layout.show(this, CARD_FEEDBACK);
@@ -269,6 +240,52 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	 */
 	private void browseForInstall() {
 		onBrowseForInstall();
+	}
+
+	private class FeedbackImpl implements LauncherFeedback {
+		private final Container container;
+
+		public FeedbackImpl(@Nonnull Container container) {
+			this.container = container;
+		}
+
+		@Nonnull
+		@Override
+		public TransferListener provideJavaFxDownloadListener() {
+			return new ProgressBarTransferListener(JavaFxTasks.FALLBACK_FX_SIZE_BYTES, javafxVersionProgress);
+		}
+
+		@Nonnull
+		@Override
+		public TransferListener provideRecafDownloadListener() {
+			return new ProgressBarTransferListener(RecafTasks.FALLBACK_RECAF_SIZE_BYTES, recafVersionProgress);
+		}
+
+		@Override
+		public void updateLaunchProgressMessage(@Nonnull String message) {
+			feedbackLabel.setText(message);
+		}
+
+		@Override
+		public void finishLaunchProgress(boolean success) {
+			if (success) {
+				feedbackLabel.setText("Launched!");
+				feedbackProgressBar.setIndeterminate(false);
+				feedbackProgressBar.setValue(100);
+
+				// Cancel watch service
+				watching = false;
+				if (watchFuture != null) watchFuture.cancel(true);
+
+				// Hide the UI now that the launch is complete.
+				frame.setVisible(false);
+				frame.dispose();
+			} else {
+				// Swap back to the info display card.
+				CardLayout layout = (CardLayout) getLayout();
+				layout.show(container, CARD_INFO);
+			}
+		}
 	}
 
 	private void initComponents() {

@@ -41,15 +41,8 @@ public class PopupLauncherFeedback extends JDialog implements LauncherFeedback {
 	}
 
 	@Override
-	public void finishLaunchProgress() {
-		// Keep the last progress message of 'launching recaf' open for a bit since Recaf
-		// takes a short bit to open up anyways.
-		CompletableFuture.runAsync(() -> {
-			try {
-				Thread.sleep(1500);
-			} catch (InterruptedException ignored) {}
-			setVisible(false);
-		});
+	public void finishLaunchProgress(boolean success) {
+		setVisible(false);
 	}
 
 	@Nonnull
