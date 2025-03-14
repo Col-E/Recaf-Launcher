@@ -11,6 +11,7 @@ import software.coley.recaf.launcher.task.JavaFxTasks;
 import software.coley.recaf.launcher.task.RecafTasks;
 import software.coley.recaf.launcher.task.error.InvalidInstallationException;
 import software.coley.recaf.launcher.util.CommonPaths;
+import software.coley.recaf.launcher.util.ResettableDelayTask;
 import software.coley.recaf.launcher.util.TransferListener;
 
 import javax.annotation.Nonnull;
@@ -33,6 +34,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Panel for updating Recaf, JavaFX, and picking which JVM to run Recaf with.
@@ -79,6 +81,10 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 
 		watchFuture = CompletableFuture.runAsync(() -> {
 			try {
+				ResettableDelayTask delayableUpdate = new ResettableDelayTask(() -> {
+					updateJavafxLabel();
+					updateRecafLabel();
+				}, 500, TimeUnit.MILLISECONDS);
 				Path recafDirectory = CommonPaths.getRecafDirectory();
 				WatchService watchService = FileSystems.getDefault().newWatchService();
 				recafDirectory.register(watchService,
@@ -102,8 +108,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 
 						// However, the order of events makes that not super reliable.
 						// So instead we just refresh the labels for any change in the directory.
-						updateJavafxLabel();
-						updateRecafLabel();
+						delayableUpdate.startOrReset();
 					}
 
 					// To receive further events, reset the key
