@@ -1,9 +1,9 @@
 package software.coley.recaf.launcher.util;
 
-import dev.dirs.BaseDirectories;
 import software.coley.recaf.launcher.info.PlatformType;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -22,24 +22,11 @@ public class CommonPaths {
 			return Paths.get(recafDir);
 		}
 
-		// Use generic data/config location.
-		try {
-			// Windows: %APPDATA%/
-			// Mac:     $HOME/Library/Application Support/
-			// Linux:   $XDG_CONFIG_HOME/   or   $HOME/.config
-			String dir = BaseDirectories.get().configDir;
-			if (dir == null)
-				throw new IllegalStateException("BaseDirectories did not yield an initial directory");
-			return Paths.get(dir).resolve("Recaf");
-		} catch (Throwable t) {
-			// The lookup only seems to fail on windows.
-			// And we can look up the APPDATA folder easily.
-			if (PlatformType.get() == PlatformType.WINDOWS) {
-				return Paths.get(System.getenv("APPDATA"), "Recaf");
-			} else {
-				throw new IllegalStateException("Failed to get Recaf directory", t);
-			}
-		}
+		// Otherwise put it in the system's config directory
+		Path dir = getSystemConfigDir();
+		if (dir == null)
+			throw new IllegalStateException("Failed to determine config directory for: " + System.getProperty("os.name"));
+		return dir.resolve("Recaf");
 	}
 
 	/**
@@ -96,5 +83,26 @@ public class CommonPaths {
 	@Nonnull
 	public static Path getSnapshotWorkflowFile() {
 		return getLauncherDir().resolve("installed-workflow-id.txt");
+	}
+
+	/**
+	 * @return Root config directory for the current OS.
+	 */
+	@Nullable
+	private static Path getSystemConfigDir() {
+		if (PlatformType.isWindows()) {
+			return Paths.get(System.getenv("APPDATA"));
+		} else if (PlatformType.isMac()) {
+			// Mac-OS paths:
+			//  https://developer.apple.com/library/archive/qa/qa1170/_index.html
+			return Paths.get(System.getProperty("user.home") + "/Library/Application Support");
+		} else if (PlatformType.isLinux()) {
+			// $XDG_CONFIG_HOME or $HOME/.config
+			String xdgConfigHome = System.getenv("XDG_CONFIG_HOME");
+			if (xdgConfigHome != null)
+				return Paths.get(xdgConfigHome);
+			return Paths.get(System.getProperty("user.home") + "/.config");
+		}
+		return null;
 	}
 }

@@ -7,7 +7,6 @@ dependencies {
     api 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     api 'org.ow2.asm:asm:9.7.1'
     api 'org.json:json:20240303' // Used to transform XML into JSON
-    api 'dev.dirs:directories:26'
     api 'ch.qos.logback:logback-classic:1.3.14' // Can't update if we want to support running under Java 8
     api 'com.google.code.findbugs:jsr305:3.0.2'
 
