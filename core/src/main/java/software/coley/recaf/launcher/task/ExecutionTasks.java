@@ -153,7 +153,8 @@ public class ExecutionTasks {
 				installedVersion.getVersion(), javaFxVersion.getVersion(), javaFxPlatform.getClassifier());
 
 		// Create the process.
-		ProcessBuilder builder = new ProcessBuilder(javaExecutablePath, "-cp", launchWrapperclasspath, MAIN_CLASS);
+		ProcessBuilder builder = new ProcessBuilder(javaExecutablePath, "-cp", launchWrapperclasspath,
+				"--enable-native-access=ALL-UNNAMED", MAIN_CLASS);
 		builder.directory(recafDirectory.toFile());
 		Process recafProcess = builder.start();
 
