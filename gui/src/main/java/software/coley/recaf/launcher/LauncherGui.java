@@ -253,7 +253,7 @@ public class LauncherGui {
 				try {Thread.sleep(2000);} catch (InterruptedException ignored) {}
 				launchFuture.complete(true);
 			}).start();
-			ExecutionTasks.RunResult result = ExecutionTasks.run(true, javaExecutablePath);
+			ExecutionTasks.RunResult result = ExecutionTasks.run(true, false, javaExecutablePath);
 
 			// At this point Recaf has closed. We want to complete the launch future if it hasn't been completed already.
 			// If Recaf closed normally we want to kill the launcher process. Otherwise, we want to stick around to

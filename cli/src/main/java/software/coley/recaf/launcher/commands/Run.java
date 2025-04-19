@@ -27,7 +27,7 @@ public class Run implements Callable<ExecutionTasks.RunResult> {
 	public ExecutionTasks.RunResult call() throws Exception {
 		try {
 			String javaExecutablePath = javaExecutable == null ? null : javaExecutable.getAbsolutePath();
-			return ExecutionTasks.run(true, javaExecutablePath);
+			return ExecutionTasks.run(true, true, javaExecutablePath);
 		} catch (IOException ex) {
 			logger.error("Encountered error running Recaf", ex);
 			throw ex;

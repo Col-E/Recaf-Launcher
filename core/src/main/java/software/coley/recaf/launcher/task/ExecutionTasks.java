@@ -48,6 +48,9 @@ public class ExecutionTasks {
 	/**
 	 * @param inheritIO
 	 *        {@code true} to pipe the started process's output into this one.
+	 * @param cliContext
+	 *        {@code true} when invoked from a CLI context.
+	 *        {@code false} when invoked from a GUI context.
 	 * @param javaExecutablePath
 	 * 		Path to use for invoking Java.
 	 * 		Use {@code null} to automatically match the current runtime's version.
@@ -56,7 +59,7 @@ public class ExecutionTasks {
 	 * 		When the process couldn't be launched.
 	 */
 	@Nonnull
-	public static RunResult run(boolean inheritIO, @Nullable String javaExecutablePath) throws IOException {
+	public static RunResult run(boolean inheritIO, boolean cliContext, @Nullable String javaExecutablePath) throws IOException {
 		Path recafDirectory = CommonPaths.getRecafDirectory();
 		logger.debug("Looking in '{}' for Recaf/dependencies...", recafDirectory);
 
@@ -64,8 +67,11 @@ public class ExecutionTasks {
 		try {
 			installedVersion = RecafTasks.getInstalledVersion();
 		} catch (InvalidInstallationException e) {
+			String suggestion = cliContext ?
+					"- Try running with 'update'" :
+					"- Click 'Update' next to the 'Recaf Version' label in the GUI";
 			logger.error("No local version of Recaf found.\n" +
-					"- Try running with 'update'");
+					suggestion);
 			return new RunResult(ERR_NOT_INSTALLED);
 		}
 
@@ -75,16 +81,19 @@ public class ExecutionTasks {
 		JavaFxVersion javaFxVersion = JavaFxTasks.detectCachedVersion();
 
 		// Ensure a version was found
+		String updateJfxSuggestion = cliContext ?
+				"- Try running with 'update-jfx'" :
+				"- Click 'Update' next to the 'JavaFX Version' label in the GUI";
 		if (javaFxVersion == null) {
 			logger.error("No local cached version of JavaFX found.\n" +
-					"- Try running with 'update-jfx'");
+					updateJfxSuggestion);
 			return new RunResult(ERR_NO_JFX);
 		}
 
 		// Ensure a valid version was found
 		if (javaFxVersion.getMajorVersion() < JavaFxVersion.MIN_SUGGESTED) {
 			logger.error("The cached version of JavaFX was too old ({}).\n" +
-					"- Try running with 'update-jfx'", javaFxVersion);
+					updateJfxSuggestion, javaFxVersion);
 			return new RunResult(ERR_FX_OLD_VERSION);
 		}
 

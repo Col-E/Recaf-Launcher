@@ -46,7 +46,7 @@ public class Auto implements Callable<Void> {
 
 		// Run recaf.
 		try {
-			ExecutionTasks.run(true, null);
+			ExecutionTasks.run(true, true, null);
 		} catch (IOException ex) {
 			logger.error("Encountered error running Recaf", ex);
 		}
