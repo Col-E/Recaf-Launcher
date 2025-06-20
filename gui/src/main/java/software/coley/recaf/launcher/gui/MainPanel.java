@@ -139,6 +139,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	 * Update the JavaFX label to match what is in the {@link CommonPaths#getDependenciesDir()}.
 	 */
 	private void updateJavafxLabel() {
+		String updateText = "Update";
 		JavaFxVersion fxVersion = JavaFxTasks.detectCachedVersion();
 		if (fxVersion != null) {
 			String versionName = fxVersion.getVersion();
@@ -148,6 +149,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 				javafxVersionLabel.setText("<html><p>" + versionName +
 						"<span style=\"color: #780000; font-weight: bold;\"> " +
 						"(Requires Java " + requiredJavaVersion + ")</span></p></html>");
+				updateText = "Downgrade";
 			} else if (fxVersion.getMajorVersion() <= JavaFxVersion.MIN_SUGGESTED_JFX_VERSION) {
 				// JavaFX is older than what Recaf requires
 				javafxVersionLabel.setText("<html><p>" + versionName +
@@ -160,6 +162,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 			// JavaFX is not installed
 			javafxVersionLabel.setText("<html><p style=\"color: #780000; font-weight: bold;\">Not installed</p></html>");
 		}
+		updateJavafxButton.setText(updateText);
 	}
 
 	/**
