@@ -11,6 +11,7 @@ import software.coley.recaf.launcher.gui.FirstTimePanel;
 import software.coley.recaf.launcher.gui.MainPanel;
 import software.coley.recaf.launcher.gui.PopupLauncherFeedback;
 import software.coley.recaf.launcher.info.JavaInstall;
+import software.coley.recaf.launcher.info.JavaVersion;
 import software.coley.recaf.launcher.task.ExecutionTasks;
 import software.coley.recaf.launcher.task.JavaFxTasks;
 import software.coley.recaf.launcher.task.RecafTasks;
@@ -226,10 +227,14 @@ public class LauncherGui {
 			updateRecaf(feedback);
 		}
 
+		// Get Java version from config.
+		JavaInstall javaInstall = config.getJavaInstall();
+		int javaVersion = javaInstall == null ? JavaVersion.get() : javaInstall.getVersion();
+
 		// Only update JavaFX when needed.
 		if (javafxRequiresUpdate()) {
 			feedback.updateLaunchProgressMessage("Updating JavaFX...");
-			updateJavafx(feedback);
+			updateJavafx(feedback, javaVersion);
 		}
 
 		// Notify we're at the launch step.
@@ -244,7 +249,6 @@ public class LauncherGui {
 		});
 
 		try {
-			JavaInstall javaInstall = config.getJavaInstall();
 			String javaExecutablePath = javaInstall == null ? null : javaInstall.getJavaExecutable().toString();
 
 			// The "run" task blocks the thread. So if we don't see any result in the next ~2 seconds we assume
@@ -339,15 +343,17 @@ public class LauncherGui {
 	 *
 	 * @param feedback
 	 * 		Feedback mechanism for update progress.
+	 * @param javaVersion
+	 * 		Version of Java to use for compatibility filtering.
 	 */
-	public static void updateJavafx(@Nonnull LauncherFeedback feedback) {
+	public static void updateJavafx(@Nonnull LauncherFeedback feedback, int javaVersion) {
 		JavaFxTasks.setDownloadListener(feedback.provideJavaFxDownloadListener());
 
 		// Clean the slate by clearing the cache
 		JavaFxTasks.checkClearCache(true, false, 0, 0);
 
 		// Ensure the update passed (null means it failed)
-		if (JavaFxTasks.update(-1, true) == null) {
+		if (JavaFxTasks.update(-1, javaVersion, true) == null) {
 			logger.error("Failed fetching JavaFX after update was initiated");
 			if (uiContext) {
 				Path dependenciesDir = CommonPaths.getDependenciesDir();

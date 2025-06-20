@@ -7,6 +7,7 @@ import software.coley.recaf.launcher.LauncherGui;
 import software.coley.recaf.launcher.info.JavaFxVersion;
 import software.coley.recaf.launcher.info.JavaInstall;
 import software.coley.recaf.launcher.info.RecafVersion;
+import software.coley.recaf.launcher.task.JavaEnvTasks;
 import software.coley.recaf.launcher.task.JavaFxTasks;
 import software.coley.recaf.launcher.task.RecafTasks;
 import software.coley.recaf.launcher.task.error.InvalidInstallationException;
@@ -33,6 +34,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -117,6 +119,8 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 			} catch (IOException | InterruptedException ignored) {
 			}
 		});
+
+		installCombo.addItemListener(e -> updateJavafxLabel());
 	}
 
 	/**
@@ -135,18 +139,43 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	 * Update the JavaFX label to match what is in the {@link CommonPaths#getDependenciesDir()}.
 	 */
 	private void updateJavafxLabel() {
-		JavaFxVersion version = JavaFxTasks.detectCachedVersion();
-		if (version != null) {
-			String versionName = version.getVersion();
-			if (version.getMajorVersion() <= JavaFxVersion.MIN_SUGGESTED) {
+		JavaFxVersion fxVersion = JavaFxTasks.detectCachedVersion();
+		if (fxVersion != null) {
+			String versionName = fxVersion.getVersion();
+			int requiredJavaVersion = fxVersion.getRequiredJavaVersion();
+			if (requiredJavaVersion > getSelectedJavaInstall().getVersion()) {
+				// JavaFX depends on newer version of Java
 				javafxVersionLabel.setText("<html><p>" + versionName +
-						"<span style=\"color: #780000; font-weight: bold;\"> (Outdated)</span></p></html>");
+						"<span style=\"color: #780000; font-weight: bold;\"> " +
+						"(Requires Java " + requiredJavaVersion + ")</span></p></html>");
+			} else if (fxVersion.getMajorVersion() <= JavaFxVersion.MIN_SUGGESTED_JFX_VERSION) {
+				// JavaFX is older than what Recaf requires
+				javafxVersionLabel.setText("<html><p>" + versionName +
+						"<span style=\"color: #780000; font-weight: bold;\"> " +
+						"(Outdated)</span></p></html>");
 			} else {
 				javafxVersionLabel.setText(versionName);
 			}
 		} else {
+			// JavaFX is not installed
 			javafxVersionLabel.setText("<html><p style=\"color: #780000; font-weight: bold;\">Not installed</p></html>");
 		}
+	}
+
+	/**
+	 * @return Selected Java install.
+	 */
+	@Nonnull
+	private JavaInstall getSelectedJavaInstall() {
+		Object selectedItem = installCombo.getSelectedItem();
+		if (selectedItem instanceof JavaInstall)
+			return (JavaInstall) selectedItem;
+
+		// Fall back to first available install
+		Collection<JavaInstall> installs = JavaEnvTasks.getJavaInstalls();
+		if (installs.isEmpty())
+			throw new IllegalStateException();
+		return installs.iterator().next();
 	}
 
 	@Nonnull
@@ -209,7 +238,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 			updateJavafxButton.setEnabled(false);
 			javafxVersionLabel.setText("<html><i>Updating...</i></html>");
 
-			LauncherGui.updateJavafx(feedback);
+			LauncherGui.updateJavafx(feedback, getSelectedJavaInstall().getVersion());
 
 			// Put the label back in its original place and re-enable the button
 			javafxVersionProgress.setIndeterminate(false);
@@ -226,8 +255,6 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 	 * @see #launchButton
 	 */
 	private void launch() {
-
-
 		CompletableFuture.runAsync(() -> {
 			// Swap to the feedback display card.
 			CardLayout layout = (CardLayout) getLayout();

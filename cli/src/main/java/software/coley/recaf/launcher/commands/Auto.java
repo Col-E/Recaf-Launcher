@@ -2,6 +2,7 @@ package software.coley.recaf.launcher.commands;
 
 import org.slf4j.Logger;
 import picocli.CommandLine.Command;
+import software.coley.recaf.launcher.info.JavaVersion;
 import software.coley.recaf.launcher.task.ExecutionTasks;
 import software.coley.recaf.launcher.task.JavaFxTasks;
 import software.coley.recaf.launcher.task.RecafTasks;
@@ -33,7 +34,7 @@ public class Auto implements Callable<Void> {
 
 		// Update JavaFX when possible, clearing outdated cache entries when it gets too cluttered
 		JavaFxTasks.checkClearCache(false, true, 30, 64_000_000);
-		if (JavaFxTasks.update(false) == null)
+		if (JavaFxTasks.update(-1, JavaVersion.get(), false) == null)
 			return null;
 
 		// Update Recaf.

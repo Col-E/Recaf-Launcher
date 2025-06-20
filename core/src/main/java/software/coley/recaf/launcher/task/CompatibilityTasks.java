@@ -42,8 +42,10 @@ public class CompatibilityTasks {
 		} else {
 			try {
 				int fx = fxVersion.getMajorVersion();
-				if (fx < JavaFxVersion.MIN_SUGGESTED)
+				if (fx < JavaFxVersion.MIN_SUGGESTED_JFX_VERSION)
 					set.add(CompatibilityProblem.OUTDATED_JAVA_FX_ARTIFACTS);
+				else if (!fxVersion.isCompatibleWith(javaVersion))
+					set.add(CompatibilityProblem.TOO_NEW_JAVA_FX_ARTIFACTS);
 			} catch (Throwable t) {
 				// Can be thrown if the version string cannot be parsed to a major release integer
 				set.add(CompatibilityProblem.OUTDATED_JAVA_FX_ARTIFACTS);
@@ -83,6 +85,7 @@ public class CompatibilityTasks {
 		UNKNOWN_JAVA_VERSION(() -> "Unknown Java version"),
 		OUTDATED_JAVA_VERSION(() -> "Outdated Java version (" + JavaVersion.get() + "), requires 22+"),
 		OUTDATED_JAVA_FX_ARTIFACTS(() -> "Outdated JavaFX artifacts"),
+		TOO_NEW_JAVA_FX_ARTIFACTS(() -> "JavaFX artifacts depend on higher version of Java"),
 		NO_CACHED_JAVA_FX(() -> "Missing JavaFX artifacts");
 
 		private final Supplier<String> message;

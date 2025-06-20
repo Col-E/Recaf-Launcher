@@ -91,7 +91,7 @@ public class ExecutionTasks {
 		}
 
 		// Ensure a valid version was found
-		if (javaFxVersion.getMajorVersion() < JavaFxVersion.MIN_SUGGESTED) {
+		if (javaFxVersion.getMajorVersion() < JavaFxVersion.MIN_SUGGESTED_JFX_VERSION) {
 			logger.error("The cached version of JavaFX was too old ({}).\n" +
 					updateJfxSuggestion, javaFxVersion);
 			return new RunResult(ERR_FX_OLD_VERSION);

@@ -3,6 +3,7 @@ package software.coley.recaf.launcher.commands;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import software.coley.recaf.launcher.info.JavaFxVersion;
+import software.coley.recaf.launcher.info.JavaVersion;
 import software.coley.recaf.launcher.task.JavaFxTasks;
 
 import java.util.concurrent.Callable;
@@ -28,6 +29,6 @@ public class UpdateJavaFX implements Callable<JavaFxVersion> {
 	@Override
 	public JavaFxVersion call() {
 		JavaFxTasks.checkClearCache(clear, keepLatest, maxCacheCount, maxCacheSize);
-		return JavaFxTasks.update(version, force);
+		return JavaFxTasks.update(version, JavaVersion.get(), force);
 	}
 }

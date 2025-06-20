@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import software.coley.recaf.launcher.info.ArchitectureType;
 import software.coley.recaf.launcher.info.JavaFxPlatform;
 import software.coley.recaf.launcher.info.JavaFxVersion;
-import software.coley.recaf.launcher.info.JavaVersion;
 import software.coley.recaf.launcher.info.PlatformType;
 import software.coley.recaf.launcher.info.SystemInformation;
 import software.coley.recaf.launcher.util.CommonPaths;
@@ -51,7 +50,10 @@ public class JavaFxTasks {
 
 	static {
 		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(0, 17); // Base case
-		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(23, 21); // JavaFX 23 requires Java 21 or higher)
+		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(23, 21); // JavaFX 23 requires Java 21 or higher
+		// Starting from JavaFX 25, an N-2 approach has been taken with Java version support
+		for (int i = 25; i < 100; i++)
+			JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(i, i - 2);
 	}
 
 	/**
@@ -131,14 +133,13 @@ public class JavaFxTasks {
 	}
 
 	/**
-	 * @param compatibilityWithCurrentVM
-	 *        {@code true} to filter out remote results which are not compatible with the current Java version.
-	 *        {@code false} to not filter results based on Java version compatibility.
+	 * @param javaVersion
+	 * 		Version of Java to use for compatibility filtering.
 	 *
 	 * @return Latest remote JavaFX version.
 	 */
 	@Nullable
-	public static JavaFxVersion detectLatestRemoteVersion(boolean compatibilityWithCurrentVM) {
+	public static JavaFxVersion detectLatestRemoteVersion(int javaVersion) {
 		try {
 			String metadataXml = Web.getText(JFX_METADATA);
 			String metadataJson = XML.toJSONObject(metadataXml).toString();
@@ -147,7 +148,6 @@ public class JavaFxTasks {
 			JsonArray versions = versioning.get("versions").asObject().get("version").asArray();
 
 			// Newer versions are last in the array.
-			int currentJavaVersion = JavaVersion.get();
 			for (int i = versions.size() - 1; i > 0; i--) {
 				// The XML scheme handling in this json library is... kinda annoying.
 				//   <version>11.0.1</version ---> String
@@ -160,14 +160,11 @@ public class JavaFxTasks {
 				else if (version.isNumber())
 					versionString = String.valueOf(version.asInt());
 				else
-					versionString = String.valueOf(JavaFxVersion.MIN_SUGGESTED); // Fallback.
+					versionString = String.valueOf(JavaFxVersion.MIN_SUGGESTED_JFX_VERSION); // Fallback.
 
+				// Only return this version if its compatible with the given java version.
 				JavaFxVersion latestVersion = new JavaFxVersion(versionString);
-
-				// Only return this version if its compatible with the current JDK.
-				int major = latestVersion.getMajorVersion();
-				int requiredJavaVersion = JFX_SUPPORTED_JDK_MAP.floorEntry(major).getValue();
-				if (!compatibilityWithCurrentVM || currentJavaVersion >= requiredJavaVersion)
+				if (latestVersion.isCompatibleWith(javaVersion))
 					return latestVersion;
 			}
 
@@ -293,22 +290,11 @@ public class JavaFxTasks {
 	/**
 	 * Downloads and caches the latest version of JavaFX if we're not already up-to-date.
 	 *
-	 * @param force
-	 *        {@code true} to re-download the version even if a local one exists.
-	 *
-	 * @return Local version of JavaFX after update process.
-	 */
-	@Nullable
-	public static JavaFxVersion update(boolean force) {
-		return update(-1, force);
-	}
-
-	/**
-	 * Downloads and caches the latest version of JavaFX if we're not already up-to-date.
-	 *
-	 * @param version
+	 * @param fxVersion
 	 * 		Target JavaFX version to use, instead of whatever is the latest.
 	 * 		Any value less than 11 <i>(JavaFX's first maven version)</i> to use the latest.
+	 * @param javaVersion
+	 * 		Version of Java to use for compatibility filtering.
 	 * @param force
 	 *        {@code true} to re-download the version even if a local one exists.
 	 *
@@ -316,11 +302,15 @@ public class JavaFxTasks {
 	 * Can be {@code null} if the local version is missing and the remote version cannot be checked.
 	 */
 	@Nullable
-	public static JavaFxVersion update(int version, boolean force) {
-		JavaFxVersion latest = version < 11 ? detectLatestRemoteVersion(false) : new JavaFxVersion(version);
+	public static JavaFxVersion update(int fxVersion, int javaVersion, boolean force) {
+		JavaFxVersion latest = fxVersion < 11 ? detectLatestRemoteVersion(javaVersion) : new JavaFxVersion(fxVersion);
 		JavaFxVersion local = detectCachedVersion();
+
+		// Can't do anything if we don't know what remote version there is.
 		if (latest == null)
 			return local;
+
+		// If no local JFX version is found we must force the update process.
 		if (local == null)
 			force = true;
 		if (force || latest.isNewer(local)) {

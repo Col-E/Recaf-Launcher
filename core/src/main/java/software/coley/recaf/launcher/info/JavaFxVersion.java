@@ -1,5 +1,7 @@
 package software.coley.recaf.launcher.info;
 
+import software.coley.recaf.launcher.task.JavaFxTasks;
+
 /**
  * JavaFX version model.
  */
@@ -8,7 +10,7 @@ public class JavaFxVersion implements Version {
 	/**
 	 * Oldest version we'd suggest using.
 	 */
-	public static final int MIN_SUGGESTED = 21;
+	public static final int MIN_SUGGESTED_JFX_VERSION = 21;
 
 	private final String version;
 
@@ -31,6 +33,24 @@ public class JavaFxVersion implements Version {
 		if (version.contains("-"))
 			return Integer.parseInt(version.substring(0, version.indexOf('-')));
 		throw new IllegalStateException("Cannot map JFX version to major version: " + version);
+	}
+
+	/**
+	 * @return Required version of Java for this FX version.
+	 */
+	public int getRequiredJavaVersion() {
+		int fxVerKey = JavaFxTasks.JFX_SUPPORTED_JDK_MAP.floorKey(getMajorVersion());
+		return JavaFxTasks.JFX_SUPPORTED_JDK_MAP.get(fxVerKey);
+	}
+
+	/**
+	 * @param javaVersion
+	 * 		Java version to check compatibility with.
+	 *
+	 * @return {@code true} when the given version is less than or equal to {@link #getRequiredJavaVersion()}.
+	 */
+	public boolean isCompatibleWith(int javaVersion) {
+		return getRequiredJavaVersion() <= javaVersion;
 	}
 
 	@Override
