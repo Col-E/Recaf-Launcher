@@ -5,4 +5,5 @@ out/
 .gradle/
 *.iml
 *.log
+generated/
 dependency-reduced-pom.xml

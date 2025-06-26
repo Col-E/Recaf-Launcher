@@ -145,7 +145,7 @@ public class LauncherGui {
 		setupLookAndFeel();
 
 		JFrame frame = new JFrame();
-		frame.setTitle("Recaf Launcher");
+		frame.setTitle("Recaf Launcher: " + LauncherBuildConfig.VERSION);
 		try {
 			recafImage = ImageIO.read(Objects.requireNonNull(LauncherGui.class.getResource("/images/logo.png")));
 			frame.setIconImage(recafImage);
