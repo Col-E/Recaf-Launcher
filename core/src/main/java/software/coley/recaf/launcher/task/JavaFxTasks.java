@@ -46,6 +46,7 @@ public class JavaFxTasks {
 	public static final NavigableMap<Integer, Integer> JFX_SUPPORTED_JDK_MAP = new TreeMap<>();
 	private static final Logger logger = Loggers.newLogger();
 	private static final String JFX_METADATA = "https://repo1.maven.org/maven2/org/openjfx/javafx-base/maven-metadata.xml";
+	private static final String[] ARTIFACT_NAMES = {"javafx-base", "javafx-graphics", "javafx-controls", "javafx-media"};
 	private static TransferListener downloadListener;
 
 	static {
@@ -161,6 +162,26 @@ public class JavaFxTasks {
 					versionString = String.valueOf(version.asInt());
 				else
 					versionString = String.valueOf(JavaFxVersion.MIN_SUGGESTED_JFX_VERSION); // Fallback.
+
+				// Double check that the version has the artifacts for our system.
+				// - Some versions may unexpectedly ship without proper artifacts for all platforms (see: 25-ea+22)
+				boolean hasArtifacts = true;
+				String artifactFormat = "%s-%s-%s.jar.sha1";
+				String artifactUrlFormat = "https://repo1.maven.org/maven2/org/openjfx/%s/%s/" + artifactFormat;
+				String classifier = detectSystemPlatform().getClassifier();
+				try {
+					for (String artifact : ARTIFACT_NAMES) {
+						String artifactUrl = String.format(artifactUrlFormat, artifact, versionString, artifact, versionString, classifier);
+						if (Web.getText(artifactUrl).length() < 40) {
+							hasArtifacts = false;
+							break;
+						}
+					}
+				} catch (Exception ex) {
+					hasArtifacts = false;
+				}
+				if (!hasArtifacts)
+					continue;
 
 				// Only return this version if its compatible with the given java version.
 				JavaFxVersion latestVersion = new JavaFxVersion(versionString);
@@ -349,8 +370,7 @@ public class JavaFxTasks {
 		//   <ARTIFACT>-<VERSION>-<CLASSIFIER>.jar
 		String versionName = version.getVersion();
 		String classifier = platform.getClassifier();
-		String[] artifacts = {"javafx-base", "javafx-graphics", "javafx-controls", "javafx-media"};
-		for (String artifact : artifacts) {
+		for (String artifact : ARTIFACT_NAMES) {
 			String artifactFormat = "%s-%s-%s.jar";
 			String artifactUrlFormat = "https://repo1.maven.org/maven2/org/openjfx/%s/%s/" + artifactFormat;
 			String localArtifact = String.format(artifactFormat, artifact, versionName, classifier);

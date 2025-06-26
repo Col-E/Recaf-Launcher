@@ -1,5 +1,8 @@
 package software.coley.recaf.launcher.info;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * JavaFX supported platforms.
  */
@@ -15,7 +18,7 @@ public enum JavaFxPlatform {
 	private final PlatformType platform;
 	private final ArchitectureType architecture;
 
-	JavaFxPlatform(String classifier, PlatformType platform, ArchitectureType architecture) {
+	JavaFxPlatform(@Nonnull String classifier, @Nullable PlatformType platform, @Nullable ArchitectureType architecture) {
 		this.classifier = classifier;
 		this.platform = platform;
 		this.architecture = architecture;
@@ -24,6 +27,7 @@ public enum JavaFxPlatform {
 	/**
 	 * @return Maven artifact classifier for this platform.
 	 */
+	@Nonnull
 	public String getClassifier() {
 		return classifier;
 	}
@@ -31,6 +35,7 @@ public enum JavaFxPlatform {
 	/**
 	 * @return Associated platform.
 	 */
+	@Nullable
 	public PlatformType getPlatform() {
 		return platform;
 	}
@@ -38,6 +43,7 @@ public enum JavaFxPlatform {
 	/**
 	 * @return Associated platform.
 	 */
+	@Nullable
 	public ArchitectureType getArchitecture() {
 		return architecture;
 	}
