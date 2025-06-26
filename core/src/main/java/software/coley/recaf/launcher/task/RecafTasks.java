@@ -232,15 +232,18 @@ public class RecafTasks {
 
 				// Skip branches if predicate is given
 				JsonObject workflowRun = artifact.get("workflow_run").asObject();
-				if (branchMatcher != null) {
-					String branch = workflowRun.getString("head_branch", "?");
-					if (!branchMatcher.test(branch))
-						continue;
-				}
+				if (branchMatcher == null)
+					continue;
+				String branch = workflowRun.getString("head_branch", "?");
+				if (!branchMatcher.test(branch))
+					continue;
 
 				// Skip if the repository isn't Col-E/Recaf
 				int repositoryId = workflowRun.getInt("repository_id", 0);
 				if (repositoryId != RECAF_REPO_ID)
+					continue;
+				int headRepositoryId = workflowRun.getInt("head_repository_id", -1);
+				if (headRepositoryId != RECAF_REPO_ID)
 					continue;
 
 				// Size sanity check
