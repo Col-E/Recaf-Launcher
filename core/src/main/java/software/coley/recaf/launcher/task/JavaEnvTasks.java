@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -40,8 +41,8 @@ public class JavaEnvTasks {
 			scanForWindowsJavaPaths();
 		} else if (PlatformType.isLinux()) {
 			scanForLinuxJavaPaths();
-		} else {
-			// TODO: Support other platforms
+		} else if (PlatformType.isMac()) {
+			scanforMacJavaPaths();
 		}
 	}
 
@@ -84,6 +85,23 @@ public class JavaEnvTasks {
 				} catch (IOException ignored) {
 					// Skip
 				}
+			}
+		}
+	}
+
+	/**
+	 * Detect common Java installations on Mac.
+	 */
+	private static void scanforMacJavaPaths() {
+		Path jvmsRoot = Paths.get("/Library/Java/JavaVirtualMachines/");
+		if (Files.isDirectory(jvmsRoot)) {
+			try (Stream<Path> stream = Files.walk(jvmsRoot)) {
+				stream.forEach(path -> {
+					if (path.toString().endsWith("bin/java"))
+						addJavaMacInstall(path);
+				});
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 		}
 	}
@@ -159,6 +177,58 @@ public class JavaEnvTasks {
 	 */
 	@Nonnull
 	public static AdditionResult addJavaInstall(@Nonnull Path javaExecutable) {
+		return addJavaInstall(javaExecutable, executable -> {
+			// Most installs are structured like: /whatever/jvms/openjdk-21.0.3/bin/java.exe
+			// Thus, the parent of the bin directory has the name.
+			Path binDir = executable.getParent();
+			if (binDir == null)
+				return null;
+			Path jdkDir = binDir.getParent();
+			if (jdkDir == null)
+				return null;
+			return jdkDir.getFileName().toString();
+		});
+	}
+
+	/**
+	 * @param javaExecutable
+	 * 		Path to executable to add.
+	 *
+	 * @return {@code true} when the path was recognized as a valid executable.
+	 * {@code false} when discarded.
+	 */
+	@Nonnull
+	public static AdditionResult addJavaMacInstall(@Nonnull Path javaExecutable) {
+		return addJavaInstall(javaExecutable, executable -> {
+			// Mac structures things differently: /Library/Java/JavaVirtualMachines/openjdk-21.0.3.jdk/Contents/Home/bin/java.exe
+			// Thus, going up 4 directory levels will reveal the name.
+			Path binDir = executable.getParent();
+			if (binDir == null)
+				return null;
+			Path jdkHomeDir = binDir.getParent();
+			if (jdkHomeDir == null)
+				return null;
+			Path jdkContentsDir = jdkHomeDir.getParent();
+			if (jdkContentsDir == null)
+				return null;
+			Path jdkDir = jdkContentsDir.getParent();
+			if (jdkDir == null)
+				return null;
+			return jdkDir.getFileName().toString();
+		});
+	}
+
+	/**
+	 * @param javaExecutable
+	 * 		Path to executable to add.
+	 * @param executableToJvmName
+	 * 		Lookup to find JDK name from the path of the executable.
+	 *
+	 * @return {@code true} when the path was recognized as a valid executable.
+	 * {@code false} when discarded.
+	 */
+	@Nonnull
+	public static AdditionResult addJavaInstall(@Nonnull Path javaExecutable, @Nonnull Function<Path, String> executableToJvmName) {
 		// Resolve sym-links
 		if (Files.isSymbolicLink(javaExecutable)) {
 			javaExecutable = SymLinks.resolveSymLink(javaExecutable);
@@ -176,12 +246,9 @@ public class JavaEnvTasks {
 		if (!Files.exists(javaExecutable))
 			return AdditionResult.ERR_NOT_JAVA_EXEC;
 
-		// Validate path structure
+		// Validate bin structure
 		Path binDir = javaExecutable.getParent();
 		if (binDir == null)
-			return AdditionResult.ERR_PARENT;
-		Path jdkDir = binDir.getParent();
-		if (jdkDir == null)
 			return AdditionResult.ERR_PARENT;
 
 		// Validate it's a JDK and not a JRE
@@ -189,7 +256,9 @@ public class JavaEnvTasks {
 			return AdditionResult.ERR_JRE_NOT_JDK;
 
 		// Validate version
-		String jdkDirName = jdkDir.getFileName().toString();
+		String jdkDirName = executableToJvmName.apply(javaExecutable);
+		if (jdkDirName == null)
+			return AdditionResult.ERR_PARENT;
 		int version = JavaVersion.fromVersionString(jdkDirName);
 		if (version == JavaVersion.UNKNOWN_VERSION)
 			return AdditionResult.ERR_UNRESOLVED_VERSION;
