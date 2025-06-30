@@ -93,15 +93,20 @@ public class JavaEnvTasks {
 	 * Detect common Java installations on Mac.
 	 */
 	private static void scanforMacJavaPaths() {
-		Path jvmsRoot = Paths.get("/Library/Java/JavaVirtualMachines/");
-		if (Files.isDirectory(jvmsRoot)) {
-			try (Stream<Path> stream = Files.walk(jvmsRoot)) {
-				stream.forEach(path -> {
-					if (path.toString().endsWith("bin/java"))
-						addJavaMacInstall(path);
-				});
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+		Path[] jvmsRoots = new Path[] {
+				Paths.get("/Library/Java/JavaVirtualMachines/"),
+				Paths.get(System.getProperty("user.home")).resolve("/Library/Java/JavaVirtualMachines/")
+		};
+		for (Path jvmsRoot : jvmsRoots) {
+			if (Files.isDirectory(jvmsRoot)) {
+				try (Stream<Path> stream = Files.walk(jvmsRoot)) {
+					stream.forEach(path -> {
+						if (path.toString().endsWith("bin/java"))
+							addJavaMacInstall(path);
+					});
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
 			}
 		}
 	}
