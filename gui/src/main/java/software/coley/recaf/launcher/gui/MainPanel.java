@@ -63,11 +63,9 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 		javafxVersionWrapper.add(javafxVersionLabel, BorderLayout.CENTER);
 
 		// Setup install selection & style
+		// When complete, do enable version label state tracking
 		setupInstallCombo();
-		repopulateInstallModel(true);
-
-		// Setup tracking for version labels
-		setupVersionTracking();
+		repopulateInstallModel(true).thenRun(this::setupVersionTracking);
 
 		// Setup cards
 		add(CARD_INFO, versionsCard);
@@ -177,7 +175,7 @@ public class MainPanel extends BrowsableJavaVersionPanel {
 		// Fall back to first available install
 		Collection<JavaInstall> installs = JavaEnvTasks.getJavaInstalls();
 		if (installs.isEmpty())
-			throw new IllegalStateException();
+			throw new IllegalStateException("Failed to populate JVM install combo-box");
 		return installs.iterator().next();
 	}
 

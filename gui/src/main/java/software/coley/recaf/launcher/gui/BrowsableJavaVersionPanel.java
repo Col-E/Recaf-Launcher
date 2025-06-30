@@ -9,12 +9,19 @@ import software.coley.recaf.launcher.task.JavaEnvTasks;
 import software.coley.recaf.launcher.util.SymLinks;
 
 import javax.annotation.Nonnull;
-import javax.swing.*;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import java.awt.Component;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Toolkit;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -89,7 +96,7 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 
 		// Build the selection path and follow symbolic links.
 		Path selectedPath = Paths.get(lastJavaInstallSelectionDir = dialog.getDirectory(), selection);
-		if (Files.isSymbolicLink(selectedPath)){
+		if (Files.isSymbolicLink(selectedPath)) {
 			// The 'addJavaInstall' handles sym-links but we want to handle it here in case something goes wrong
 			// so that we can be more specific about our reported problem.
 			selectedPath = SymLinks.resolveSymLink(selectedPath);
@@ -136,9 +143,12 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 	 *
 	 * @param doScan
 	 *        {@code true} to live-scan for new installed versions of Java on the machine.
+	 *
+	 * @return Future of repopulation. Ends when UI is updated.
 	 */
-	protected void repopulateInstallModel(boolean doScan) {
-		CompletableFuture.runAsync(() -> {
+	@Nonnull
+	protected CompletableFuture<?> repopulateInstallModel(boolean doScan) {
+		return CompletableFuture.supplyAsync(() -> {
 			// Scan for installs
 			if (doScan)
 				JavaEnvTasks.scanForJavaInstalls();
@@ -147,26 +157,26 @@ public abstract class BrowsableJavaVersionPanel extends JPanel {
 					.filter(i -> i.getVersion() >= JavaVersion.MIN_COMPATIBLE)
 					.forEach(installs::add);
 
+			return installs;
+		}).thenAcceptAsync(installs -> {
 			// Populate model
 			if (!installs.isEmpty()) {
-				SwingUtilities.invokeLater(() -> {
-					JComboBox<JavaInstall> combo = getInstallCombo();
+				JComboBox<JavaInstall> combo = getInstallCombo();
 
-					// Copy all matched installations to the model.
-					DefaultComboBoxModel<JavaInstall> model = new DefaultComboBoxModel<>();
-					installs.forEach(model::addElement);
+				// Copy all matched installations to the model.
+				DefaultComboBoxModel<JavaInstall> model = new DefaultComboBoxModel<>();
+				installs.forEach(model::addElement);
 
-					// If the combo-box hasn't had a selection specified, put it here.
-					if (combo.getSelectedItem() == null) {
-						JavaInstall selection = Config.get().getJavaInstall();
-						if (selection == null) selection = installs.first();
-						model.setSelectedItem(selection);
-					}
+				// If the combo-box hasn't had a selection specified, put it here.
+				if (combo.getSelectedItem() == null) {
+					JavaInstall selection = Config.get().getJavaInstall();
+					if (selection == null) selection = installs.first();
+					model.setSelectedItem(selection);
+				}
 
-					// Update the combo-box with the model.
-					combo.setModel(model);
-				});
+				// Update the combo-box with the model.
+				combo.setModel(model);
 			}
-		});
+		}, SwingUtilities::invokeLater);
 	}
 }
