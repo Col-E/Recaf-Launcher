@@ -180,8 +180,9 @@ public class LauncherGui {
 		} else {
 			frame.getContentPane().add(new MainPanel(frame));
 		}
-		frame.setMinimumSize(new Dimension(600, 180));
-		frame.pack();
+		Dimension minimumSize = new Dimension(600, 180);
+		frame.setMinimumSize(minimumSize);
+		frame.setPreferredSize(minimumSize);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 	}
