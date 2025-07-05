@@ -95,7 +95,7 @@ public class JavaEnvTasks {
 	private static void scanforMacJavaPaths() {
 		Path[] jvmsRoots = new Path[] {
 				Paths.get("/Library/Java/JavaVirtualMachines/"),
-				Paths.get(System.getProperty("user.home")).resolve("/Library/Java/JavaVirtualMachines/")
+				Paths.get(System.getProperty("user.home")).resolve("Library/Java/JavaVirtualMachines/")
 		};
 		for (Path jvmsRoot : jvmsRoots) {
 			if (Files.isDirectory(jvmsRoot)) {
