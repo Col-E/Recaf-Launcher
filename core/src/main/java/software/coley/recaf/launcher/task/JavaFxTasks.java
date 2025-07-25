@@ -56,8 +56,7 @@ public class JavaFxTasks {
 		// Starting from JavaFX 25, an N-2 approach has been taken with Java version support
 		//  for (int i = 25; i < 100; i++)
 		//  	JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(i, i - 2);
-		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(25, 23);
-		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(26, 99999); // Temporary hack, JavaFX 26 is incompatible with RichTextFX
+		JavaFxTasks.JFX_SUPPORTED_JDK_MAP.put(25, 99999); // Temporary hack, JavaFX 25+ is incompatible with RichTextFX
 	}
 
 	/**
